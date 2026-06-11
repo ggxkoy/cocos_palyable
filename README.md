@@ -2,10 +2,11 @@
 
 This repository contains small playable rebuild slices for Cocos Creator style ad flows.
 
-It has two parts:
+## Included Files
 
-- `web/`: a standalone HTML5 tower-defense playable preview that can run immediately in a browser.
-- `web/gold/`: a second standalone playable based on the `金闪闪.html` flow: tap glowing gold rewards, upgrade the base, show a short battle, then end on a CTA.
+- `web/index.html`: standalone HTML5 tower-defense playable preview.
+- `web/gold/index.html`: standalone HTML5 playable rebuilt from the `reference/gold-reference.html` flow.
+- `reference/gold-reference.html`: original single-file Cocos playable reference package, copied from `金闪闪.html`.
 - `assets/scripts/`: Cocos Creator 3.x TypeScript component source for rebuilding the editable Cocos project.
 
 ## Run Preview
@@ -22,6 +23,8 @@ Open `web/index.html` or `web/gold/index.html` directly in a browser, or serve t
 - Endcard appears after a short win or fail condition.
 
 ## Gold Rush Slice
+
+`web/gold/` is a clean rebuild that follows the playable flow in `reference/gold-reference.html`. It is not a direct edit of the original Cocos bundle.
 
 - Portrait playable layout.
 - Player taps three shining crates to collect gold.
