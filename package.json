@@ -2,7 +2,11 @@
   "name": "cocos-palyable",
   "version": "0.1.0",
   "private": true,
-  "description": "Minimal Cocos playable tower-defense rebuild.",
+  "uuid": "b6f5e7a0-9c2d-4f31-8a47-3d1e5c9b2a10",
+  "creator": {
+    "version": "3.8.3"
+  },
+  "description": "Cocos Creator 3.8 playable rebuilds: gold rush slice plus tower-defense slice.",
   "scripts": {
     "typecheck": "tsc --noEmit",
     "serve": "npx http-server . -p 4173"
