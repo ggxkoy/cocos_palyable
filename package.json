@@ -1,0 +1,13 @@
+{
+  "name": "cocos-palyable",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal Cocos playable tower-defense rebuild.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "serve": "npx http-server . -p 4173"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5"
+  }
+}
