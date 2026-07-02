@@ -8,14 +8,18 @@ export const RUNNER_CONFIG = {
         timePrefix: 'Time ',
         winTitle: 'FINISH!',
         failTitle: 'CRASH!',
-        subtitle: 'Outrun the whole city',
+        subtitle: 'Dodge the trains, grab the gold',
         cta: 'PLAY NOW',
     },
     duration: 18,
-    spawnInterval: 0.9,
+    spawnInterval: 0.85,
     itemSpeed: 0.55,
-    coinChance: 0.7,
+    coinChance: 0.9,
     doubleObstacleChance: 0.35,
+    // Coins stream in as a run of N in the same lane (classic runner coin
+    // lines), spaced by this much progress between consecutive coins.
+    coinRunLength: 3,
+    coinRunSpacing: 0.07,
     playerZoneMin: 0.82,
     playerZoneMax: 0.94,
 } as const;

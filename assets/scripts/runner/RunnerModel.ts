@@ -84,8 +84,11 @@ export class RunnerModel {
         }
 
         if (Math.random() < CONFIG.coinChance) {
-            this.items.push({ id: this.nextId, lane: shuffled[obstacleCount], kind: 'coin', progress: 0 });
-            this.nextId += 1;
+            const lane = shuffled[obstacleCount];
+            for (let i = 0; i < CONFIG.coinRunLength; i += 1) {
+                this.items.push({ id: this.nextId, lane, kind: 'coin', progress: -i * CONFIG.coinRunSpacing });
+                this.nextId += 1;
+            }
         }
     }
 }
