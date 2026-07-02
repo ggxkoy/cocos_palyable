@@ -2,17 +2,23 @@
 description: 解析参考视频，输出 playable 策划案 markdown（视频 → docs/design/<名称>.md）
 ---
 
-把参考视频解析成一份结构化策划案。输入：`$ARGUMENTS`（视频路径；为空时取 `reference/incoming/` 下最新的视频文件，或用户在对话中附带的视频/截图）。
+把参考视频解析成一份结构化策划案。输入：`$ARGUMENTS`（视频**路径或链接**；为空时取 `reference/incoming/` 下最新的视频文件，或用户在对话中附带的视频/截图）。
 
 ## 步骤
 
 1. **定位素材**
-   - `$ARGUMENTS` 给了路径就用它；否则找 `reference/incoming/` 下最新的 `.mp4/.mov/.webm/.html` 文件。
+   - 本地路径 → 直接用。
+   - **URL** → 下载到 `reference/incoming/`：
+     - 直链视频（`.mp4/.mov/.webm` 或 Content-Type 为 video/*）：`curl -L -o reference/incoming/<名称>.mp4 <url>`。
+     - 平台页面链接（YouTube / B 站 / 抖音等）：用 yt-dlp（没有就 `pip3 install --break-system-packages yt-dlp`），`yt-dlp -f "mp4/bv*+ba/b" -o "reference/incoming/<名称>.%(ext)s" <url>`；平台反爬导致失败时，停下来请用户提供直链或直接上传文件。
+     - 下载成功后把视频文件提交进仓库（体积 >50MB 时只提交抽出的关键帧，视频留在工作区）。
+   - `$ARGUMENTS` 为空 → 找 `reference/incoming/` 下最新的 `.mp4/.mov/.webm/.html` 文件。
    - 如果是 `.html` 单文件 playable（竞品包），跳过抽帧，直接按「gold-reference 分析法」grep 其中的场景名、资源清单、CTA URL、SDK 事件。
 
 2. **抽取关键帧**
    - 优先用 ffmpeg：`ffmpeg -i <视频> -vf fps=1 <scratchpad>/frames/frame_%03d.png`（每秒 1 帧；短于 20s 的视频用 fps=2）。
-   - ffmpeg 不存在时先尝试安装（`apt-get install -y ffmpeg` 或 `npx ffmpeg-static` 方案）；仍失败则检查 `reference/incoming/<名称>-frames/` 是否有用户手动放置的截图；都没有就停下来向用户要关键截图，不要凭空编造内容。
+   - 系统没有 ffmpeg 时用 pip 的静态二进制（本环境已验证可行）：`pip3 install --break-system-packages imageio-ffmpeg`，然后 `FF=$(python3 -c "import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())")` 用 `$FF` 代替 ffmpeg 命令。
+   - 都失败则检查 `reference/incoming/<名称>-frames/` 是否有用户手动放置的截图；都没有就停下来向用户要关键截图，不要凭空编造内容。
 
 3. **逐帧分析**（用 Read 工具看图）
    - 识别：核心玩法循环、阶段划分（引导→操作→反馈→结算）、玩家操作方式（点击/拖拽/滑动）、HUD 元素、手指引导的时机与位置、胜负条件、结算卡样式与文案、CTA 按钮文案。

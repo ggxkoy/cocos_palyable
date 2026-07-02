@@ -7,6 +7,12 @@
 /video-to-design reference/incoming/<文件名>
 ```
 
+也可以直接给视频链接（直链 mp4 或 YouTube/B 站等平台链接），命令会自动下载到本目录再解析：
+
+```
+/video-to-design https://<视频链接>
+```
+
 解析完成后会生成 `docs/design/<名称>.md` 策划案。接着运行：
 
 ```
