@@ -1,50 +1,54 @@
-# Cocos Playable Rebuilds
+# Cocos Playable 模板工厂
 
-This repository is an editable Cocos Creator 3.8 project that rebuilds the playable ad flow from `reference/gold-reference.html` (the original "金闪闪" / Last War single-file package), plus standalone HTML5 preview slices.
+一条 playable 广告生产流水线：**参考视频 → 策划案（markdown）→ agent 在 Cocos Creator 3.8 工程中实例化玩法模板**。缺失美术全部用占位 box 渲染，后续把真实图拖入组件槽位即完成换皮。
 
-## Open in Cocos Creator
+## 快速开始
 
-1. Open Cocos Creator Dashboard (3.8.x) and add the repository root as a project.
-2. Let the editor import the assets (it generates the missing `.meta` files on first open — commit them afterwards).
-3. Open `assets/scenes/maingame.scene` and press Preview.
+### 用工作流（推荐）
 
-No manual wiring is required: `GoldRushBootstrap.ts` attaches the `GoldRushGame` component to `Canvas/GameRoot` automatically when the scene launches, and every missing art asset is rendered as a tinted placeholder box.
+1. 把参考视频放进 `reference/incoming/` 并提交。
+2. 在 Claude Code 会话运行 `/video-to-design reference/incoming/<视频>` → 生成 `docs/design/<名称>.md` 策划案。
+3. 运行 `/design-to-playable docs/design/<名称>.md` → agent 选模板、填配置、跑验证。
+4. 在 Cocos Creator 3.8.x 打开工程，打开对应场景预览。
 
-## Gold Rush Playable (Cocos source)
+完整说明见 [`docs/workflow.md`](docs/workflow.md)，策划案格式见 [`docs/design-doc-template.md`](docs/design-doc-template.md)。
 
-Rebuilt from the reference package flow (Cocos Creator 3.6.5 original, portrait 720x1280):
+### 直接打开工程
 
-1. **Collect** – tap the three shining crates; each pays 25 gold with a coin-fly and spark burst, guided by a bobbing hand hint.
-2. **Upgrade** – the pulsing button spends 75 gold and upgrades the command base (lift, gold roof, flag).
-3. **Battle** – three reinforcements advance and fire while the enemy wave fades out behind a progress bar.
-4. **End** – the VICTORY end card shows; the CTA opens `https://lastwar.onelink.me/PXmq/playable` through the multi-network `download()` chain (MRAID → Facebook Playable → dapi → postMessage/ExitApi → `window.open`). `ad-event-pause` / `ad-event-resume` pause and resume the engine, matching the reference package lifecycle.
+1. Cocos Creator Dashboard（3.8.x）添加仓库根目录为项目。
+2. 首次打开会自动生成缺失的 `.meta`（生成后提交）。
+3. 打开 `assets/scenes/` 下任一场景并预览——`TemplateBootstrap` 会按场景名自动挂载对应玩法组件，零手动配置。
 
-### Source layout
+## 玩法模板目录
 
-- `assets/scenes/maingame.scene` – minimal scene (Canvas + Camera + `GameRoot`); the full node tree is built in code.
-- `assets/scripts/gold/GoldRushModel.ts` / `GoldRushTypes.ts` – pure state machine (collect → upgrade → battle → end).
-- `assets/scripts/gold/GoldRushView.ts` – builds every node and drives all animation; layout constants mirror `web/gold/playable.js`.
-- `assets/scripts/gold/GoldRushGame.ts` – main component: input binding, model/view glue, `SpriteFrame` art slots.
-- `assets/scripts/gold/PlaceholderFactory.ts` – runtime-generated white frame + tinted box/label helpers.
-- `assets/scripts/gold/PlayableSdk.ts` – CTA `download()` chain and ad lifecycle listeners.
-- `assets/scripts/gold/GoldRushBootstrap.ts` – auto-attaches `GoldRushGame` at scene launch.
+| 模板 | 场景 | 核心循环 | 逻辑冒烟验证 |
+| --- | --- | --- | --- |
+| 收集升级（金闪闪重建） | `maingame` | 点亮箱子收金 → 升级基地 → 战斗演出 → 结算 CTA | 收集→升级→3.6s 战斗→结算 |
+| 塔防 | `towerdefense` | 点槽位建塔 → 自动攻击路径敌人 → 守住/失守 | 3 塔通关 / 无塔失败 |
+| 拖拽合成 | `merge` | 拖同级物品合成升级 → 达到 Lv4 结算 | 4 步引导链到达目标 |
+| 三消 | `match3` | 点选交换、三连消除 → 限步达分 | 固定种子 4 步达标 |
+| 跑酷躲避 | `runner` | 点左右切道躲障碍吃金币 → 限时跑完/撞车 | 前瞻躲避 20/20 通关 |
 
-### Replacing the placeholder art
+每套模板统一四件套（`assets/scripts/<template>/`）：
 
-`GoldRushGame` exposes one `SpriteFrame` property per asset: `backgroundFrame`, `crateFrame`, `baseFrame`, `soldierFrame`, `enemyFrame`, `coinFrame`, `buttonFrame`, `handFrame`.
+- **Config** —— 策划案落点：文案、数值、CTA 链接，一处修改全局生效
+- **Model** —— 纯逻辑状态机（零 `cc` 依赖，可 node 单测）
+- **View** —— 代码动态建节点树 + box 占位；布局常量表用 390x844 web 坐标（`common/Layout.ts` 换算）
+- **Game** —— Cocos 组件：输入绑定、Model/View 粘合、`SpriteFrame` 美术槽位
 
-1. Import the production images into `assets/`.
-2. Select `Canvas/GameRoot` in the scene and add the `GoldRushGame` component manually (the bootstrap detects it and will not add a second one).
-3. Drag each SpriteFrame into its slot. Filled slots use the real art; empty slots keep the tinted box, and the hand-drawn detail boxes (planks, door, gun, etc.) are skipped automatically for nodes that received real art.
+共享层 `assets/scripts/common/`：PlaceholderFactory（白帧+box/label/手指）、PlayableSdk（MRAID → FB Playable → dapi → postMessage/ExitApi → window.open 的 CTA 链 + `ad-event-pause/resume`）、SparkSystem、EndCard、TemplateBootstrap（场景名 → 组件注册表）。
 
-### Repo typecheck note
+## 替换占位美术
 
-`npm run typecheck` validates all gameplay scripts against the hand-written stub in `types/cc.d.ts`. Inside Cocos Creator the editor supplies the real engine declarations; if your IDE reports a duplicate `cc` module, remove `types/**/*.d.ts` from the `include` list in `tsconfig.json` (the stub is only needed for editor-less CI checks).
+选中场景 `Canvas/GameRoot`，手动添加对应 `<Template>Game` 组件（bootstrap 检测到后不会重复挂载），把导入的 SpriteFrame 拖入槽位。填了真实图的部位自动跳过手绘细节 box，留空槽位继续用 box 占位。
 
-## HTML5 Preview Slices
+## 验证（无编辑器环境）
 
-Open `web/index.html` (tower defense) or `web/gold/index.html` (gold rush) directly in a browser, or serve the repo root with any static server. `web/gold/` follows the same flow and constants as the Cocos source and is useful as a behavioral reference.
+- `npm run typecheck` —— 全部脚本 strict 检查（基于手写 stub `types/cc.d.ts`；编辑器内如与真实声明冲突，把 `types/` 从 tsconfig include 移除即可）
+- 场景 JSON lint 与各模板 Model 冒烟脚本写法见 `CLAUDE.md` 与 git 历史
 
-## Reference Package
+## 参考与预览
 
-`reference/gold-reference.html` is the original single-file Cocos playable (obfuscated, assets embedded). The rebuild reuses its design resolution (720x1280 portrait), scene name (`maingame`), CTA URL, and ad lifecycle events, but is a clean re-implementation rather than an edit of the bundle.
+- `reference/gold-reference.html` —— 原始"金闪闪"单文件 Cocos playable（720x1280、`maingame.scene`、CTA 与广告生命周期均被模板复刻）
+- `reference/incoming/` —— 参考视频上传入口
+- `web/` 与 `web/gold/` —— 早期 HTML5 Canvas 预览切片（塔防、收集升级），可直接浏览器打开，是 Cocos 模板布局参数的行为参照

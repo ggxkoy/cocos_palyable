@@ -1,18 +1,22 @@
-import { LaneEnemy, PlayableState, Projectile, TowerSlot } from './GameTypes';
+import { TOWER_DEFENSE_CONFIG } from './TowerDefenseConfig';
+import { LaneEnemy, PlayableState, Projectile, TowerSlot } from './TowerDefenseTypes';
 
-export class PlayableModel {
+const CONFIG = TOWER_DEFENSE_CONFIG;
+
+export class TowerDefenseModel {
     public state: PlayableState = PlayableState.Ready;
-    public coins: number = 3;
-    public baseHealth: number = 5;
+    public coins: number = CONFIG.startCoins;
+    public baseHealth: number = CONFIG.baseHealth;
     public elapsed: number = 0;
-    public spawnTimer: number = 0;
+    public spawnTimer: number = CONFIG.firstSpawnDelay;
     public nextEnemyId: number = 1;
+    public nextProjectileId: number = 1;
     public readonly enemies: LaneEnemy[] = [];
     public readonly projectiles: Projectile[] = [];
     public readonly slots: TowerSlot[] = [
-        { id: 1, x: -120, y: -70, occupied: false, cooldown: 0 },
-        { id: 2, x: 0, y: -15, occupied: false, cooldown: 0 },
-        { id: 3, x: 120, y: -70, occupied: false, cooldown: 0 },
+        { id: 1, occupied: false, cooldown: 0 },
+        { id: 2, occupied: false, cooldown: 0 },
+        { id: 3, occupied: false, cooldown: 0 },
     ];
 
     public start(): void {
@@ -45,17 +49,17 @@ export class PlayableModel {
     }
 
     private updateSpawning(): void {
-        if (this.spawnTimer > 0 || this.elapsed > 20) {
+        if (this.spawnTimer > 0 || this.elapsed > CONFIG.spawnWindow) {
             return;
         }
 
-        this.spawnTimer = Math.max(0.8, 2.2 - this.elapsed * 0.05);
+        this.spawnTimer = Math.max(CONFIG.spawnIntervalMin, CONFIG.spawnIntervalMax - this.elapsed * CONFIG.spawnIntervalRamp);
         this.enemies.push({
             id: this.nextEnemyId,
             progress: 0,
-            health: 3,
-            maxHealth: 3,
-            speed: 0.08 + Math.min(this.elapsed * 0.002, 0.08),
+            health: CONFIG.enemyHealth,
+            maxHealth: CONFIG.enemyHealth,
+            speed: CONFIG.enemyBaseSpeed + Math.min(this.elapsed * CONFIG.enemySpeedRamp, CONFIG.enemySpeedCap),
         });
         this.nextEnemyId += 1;
     }
@@ -88,17 +92,18 @@ export class PlayableModel {
                 return;
             }
 
-            slot.cooldown = 0.55;
-            target.health -= 1;
+            slot.cooldown = CONFIG.towerCooldown;
+            target.health -= CONFIG.towerDamage;
             this.projectiles.push({
-                x: slot.x,
-                y: slot.y,
-                targetId: target.id,
+                id: this.nextProjectileId,
+                slotId: slot.id,
+                targetProgress: target.progress,
                 lifetime: 0.22,
             });
+            this.nextProjectileId += 1;
 
             if (target.health <= 0) {
-                this.coins += 1;
+                this.coins += CONFIG.killReward;
             }
         });
 
@@ -123,7 +128,7 @@ export class PlayableModel {
             return;
         }
 
-        if (this.elapsed >= 24 && this.enemies.length === 0) {
+        if (this.elapsed >= CONFIG.winTime && this.enemies.length === 0) {
             this.state = PlayableState.Won;
         }
     }

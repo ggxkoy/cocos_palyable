@@ -15,15 +15,13 @@ export interface LaneEnemy {
 
 export interface TowerSlot {
     readonly id: number;
-    readonly x: number;
-    readonly y: number;
     occupied: boolean;
     cooldown: number;
 }
 
 export interface Projectile {
-    x: number;
-    y: number;
-    targetId: number;
+    readonly id: number;
+    readonly slotId: number;
+    readonly targetProgress: number;
     lifetime: number;
 }

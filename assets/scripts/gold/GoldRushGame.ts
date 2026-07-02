@@ -2,7 +2,7 @@ import { _decorator, Component, Node, SpriteFrame } from 'cc';
 import { GoldRushModel } from './GoldRushModel';
 import { GoldRushPhase } from './GoldRushTypes';
 import { GoldRushView } from './GoldRushView';
-import { download, notifyGameEnd } from './PlayableSdk';
+import { download, notifyGameEnd } from '../common/PlayableSdk';
 
 const { ccclass, property } = _decorator;
 

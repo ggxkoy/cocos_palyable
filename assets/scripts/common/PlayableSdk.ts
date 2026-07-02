@@ -48,12 +48,12 @@ export function notifyGameEnd(): void {
     }
 }
 
-export function download(): void {
+export function download(url: string = STORE_URL): void {
     const host = adHost();
 
     try {
         if (host.mraid && typeof host.mraid.open === 'function') {
-            host.mraid.open(STORE_URL);
+            host.mraid.open(url);
             return;
         }
     } catch {
@@ -92,7 +92,7 @@ export function download(): void {
 
     try {
         if (typeof host.open === 'function') {
-            host.open(STORE_URL, '_blank');
+            host.open(url, '_blank');
         }
     } catch {
         // Nothing else to try; the CTA tap is still tracked by the host.

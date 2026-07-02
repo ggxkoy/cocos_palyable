@@ -13,11 +13,23 @@ declare module 'cc' {
     public clone(): Color;
   }
 
+  export class Vec2 {
+    constructor(x?: number, y?: number);
+    public x: number;
+    public y: number;
+  }
+
   export class Vec3 {
     constructor(x?: number, y?: number, z?: number);
     public x: number;
     public y: number;
     public z: number;
+  }
+
+  export function v3(x?: number, y?: number, z?: number): Vec3;
+
+  export class EventTouch {
+    public getUILocation(out?: Vec2): Vec2;
   }
 
   export class Size {
@@ -40,7 +52,9 @@ declare module 'cc' {
   export class Node {
     public static readonly EventType: {
       readonly TOUCH_START: string;
+      readonly TOUCH_MOVE: string;
       readonly TOUCH_END: string;
+      readonly TOUCH_CANCEL: string;
     };
 
     constructor(name?: string);
@@ -56,6 +70,7 @@ declare module 'cc' {
     public setPosition(x: number, y: number, z?: number): void;
     public getPosition(out?: Vec3): Vec3;
     public setScale(x: number, y: number, z?: number): void;
+    public setSiblingIndex(index: number): void;
     public getChildByName(name: string): Node | null;
     public getChildByPath(path: string): Node | null;
     public addComponent<T extends Component>(classConstructor: new (...args: never[]) => T): T;
@@ -71,6 +86,7 @@ declare module 'cc' {
     public height: number;
     public setContentSize(width: number, height: number): void;
     public setAnchorPoint(x: number, y: number): void;
+    public convertToNodeSpaceAR(worldPoint: Vec3, out?: Vec3): Vec3;
   }
 
   export class Sprite extends Component {

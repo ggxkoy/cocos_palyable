@@ -1,8 +1,11 @@
 import { Color, ImageAsset, Label, Node, Sprite, SpriteFrame, Texture2D, UITransform } from 'cc';
+import { toW } from './Layout';
 
 let cachedWhiteFrame: SpriteFrame | null = null;
 
 const WHITE: Color = new Color(255, 255, 255, 255);
+const HAND_PALM = new Color(242, 210, 178, 255);
+const HAND_TIP = new Color(255, 243, 223, 255);
 
 export function getWhiteFrame(): SpriteFrame {
     if (cachedWhiteFrame) {
@@ -74,4 +77,16 @@ export function createLabel(
     label.color = color;
     label.isBold = true;
     return label;
+}
+
+export function createHandHint(parent: Node, frame: SpriteFrame | null): Node {
+    const hand = createNode('HandHint', parent, 0, 0);
+    if (frame) {
+        createBox('HandSprite', hand, 0, 0, toW(46), toW(64), WHITE, frame);
+    } else {
+        createBox('Palm', hand, toW(2), toW(5), toW(20), toW(50), HAND_PALM);
+        createBox('Tip', hand, toW(4), -toW(26), toW(38), toW(38), HAND_TIP);
+    }
+    hand.angle = 20;
+    return hand;
 }

@@ -1,6 +1,7 @@
 import { Color, Label, Node, Sprite, SpriteFrame, UIOpacity, UITransform } from 'cc';
+import { DESIGN_HEIGHT, DESIGN_WIDTH, clamp, lerp, toH, toW, toX, toY } from '../common/Layout';
+import { createBox, createLabel, createNode } from '../common/PlaceholderFactory';
 import { GoldRushPhase, GoldRushSnapshot } from './GoldRushTypes';
-import { createBox, createLabel, createNode } from './PlaceholderFactory';
 
 export interface GoldRushFrames {
     readonly background: SpriteFrame | null;
@@ -12,15 +13,6 @@ export interface GoldRushFrames {
     readonly button: SpriteFrame | null;
     readonly hand: SpriteFrame | null;
 }
-
-// All layout constants live in the reference 390x844 web coordinate space
-// (origin top-left, y down) and are converted to the 720x1280 design space.
-const WEB_WIDTH = 390;
-const WEB_HEIGHT = 844;
-const DESIGN_WIDTH = 720;
-const DESIGN_HEIGHT = 1280;
-const SCALE_X = DESIGN_WIDTH / WEB_WIDTH;
-const SCALE_Y = DESIGN_HEIGHT / WEB_HEIGHT;
 
 const COIN_TARGET_X = 72;
 const COIN_TARGET_Y = 82;
@@ -127,30 +119,6 @@ interface SparkFx {
     vy: number;
     life: number;
     readonly maxLife: number;
-}
-
-function toX(webX: number): number {
-    return webX * SCALE_X - DESIGN_WIDTH * 0.5;
-}
-
-function toY(webY: number): number {
-    return DESIGN_HEIGHT * 0.5 - webY * SCALE_Y;
-}
-
-function toW(webW: number): number {
-    return webW * SCALE_X;
-}
-
-function toH(webH: number): number {
-    return webH * SCALE_Y;
-}
-
-function clamp(value: number, min: number, max: number): number {
-    return Math.max(min, Math.min(max, value));
-}
-
-function lerp(a: number, b: number, t: number): number {
-    return a + (b - a) * t;
 }
 
 export class GoldRushView {
