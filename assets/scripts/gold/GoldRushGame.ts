@@ -1,4 +1,5 @@
 import { _decorator, Component, Node, SpriteFrame } from 'cc';
+import { GOLD_RUSH_CONFIG } from './GoldRushConfig';
 import { GoldRushModel } from './GoldRushModel';
 import { GoldRushPhase } from './GoldRushTypes';
 import { GoldRushView } from './GoldRushView';
@@ -67,7 +68,7 @@ export class GoldRushGame extends Component {
         }
 
         if (this.view.ctaButton) {
-            this.ctaHandler = (): void => download();
+            this.ctaHandler = (): void => download(GOLD_RUSH_CONFIG.ctaUrl);
             this.view.ctaButton.on(Node.EventType.TOUCH_END, this.ctaHandler, this);
         }
     }

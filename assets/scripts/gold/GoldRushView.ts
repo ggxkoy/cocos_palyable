@@ -1,7 +1,10 @@
 import { Color, Label, Node, Sprite, SpriteFrame, UIOpacity, UITransform } from 'cc';
 import { DESIGN_HEIGHT, DESIGN_WIDTH, clamp, lerp, toH, toW, toX, toY } from '../common/Layout';
 import { createBox, createLabel, createNode } from '../common/PlaceholderFactory';
+import { GOLD_RUSH_CONFIG } from './GoldRushConfig';
 import { GoldRushPhase, GoldRushSnapshot } from './GoldRushTypes';
+
+const CONFIG = GOLD_RUSH_CONFIG;
 
 export interface GoldRushFrames {
     readonly background: SpriteFrame | null;
@@ -56,11 +59,15 @@ const HAND_PALM = new Color(242, 210, 178, 255);
 const HAND_TIP = new Color(255, 243, 223, 255);
 
 const MESSAGES: Record<GoldRushPhase, string> = {
-    [GoldRushPhase.Collect]: 'Tap the shining crates',
-    [GoldRushPhase.Upgrade]: 'Upgrade the command base',
-    [GoldRushPhase.Battle]: 'Reinforcements deployed',
-    [GoldRushPhase.End]: 'Victory unlocked',
+    [GoldRushPhase.Collect]: CONFIG.texts.collect,
+    [GoldRushPhase.Upgrade]: CONFIG.texts.upgrade,
+    [GoldRushPhase.Battle]: CONFIG.texts.battle,
+    [GoldRushPhase.End]: CONFIG.texts.end,
 };
+
+// 开采演出期金币喷涌的矿点（web 坐标，基地上方的金矿盘位置）。
+const MINE_BURST_X = 195;
+const MINE_BURST_Y = 495;
 
 interface CrateLayout {
     readonly id: number;
@@ -141,6 +148,7 @@ export class GoldRushView {
     private messageLabel: Label | null = null;
     private lastGoldText = '';
     private lastBaseText = '';
+    private mineBurstTimer = 0;
 
     private readonly soldiers: SoldierView[] = [];
     private readonly enemies: EnemyView[] = [];
@@ -254,7 +262,20 @@ export class GoldRushView {
         this.tickCoins(deltaTime);
         this.tickSparks(deltaTime);
         this.tickBattle(deltaTime, snapshot);
+        this.tickMineBursts(deltaTime, snapshot);
         this.tickHud(time, snapshot);
+    }
+
+    // 开采演出：Battle 阶段矿点周期性喷金币，复刻参考片的金条雨。
+    private tickMineBursts(deltaTime: number, snapshot: GoldRushSnapshot): void {
+        if (!CONFIG.battleCoinBursts || snapshot.phase !== GoldRushPhase.Battle) {
+            return;
+        }
+        this.mineBurstTimer -= deltaTime;
+        if (this.mineBurstTimer <= 0) {
+            this.mineBurstTimer = CONFIG.battleCoinBurstInterval;
+            this.coinBurst(MINE_BURST_X + (Math.random() * 60 - 30), MINE_BURST_Y + (Math.random() * 24 - 12));
+        }
     }
 
     private buildBackground(root: Node, frames: GoldRushFrames): void {
@@ -305,6 +326,10 @@ export class GoldRushView {
     }
 
     private buildEnemies(root: Node, frames: GoldRushFrames): void {
+        if (!CONFIG.showEnemies) {
+            return;
+        }
+
         const layout = [
             { x: 410, y: 482, offset: 0 },
             { x: 450, y: 522, offset: 0.25 },
@@ -372,7 +397,7 @@ export class GoldRushView {
         this.goldLabel = goldLabel;
 
         createBox('BasePanel', hud, toX(293), toY(47), toW(150), toH(46), PANEL_SOFT);
-        this.baseLabel = createLabel('BaseLabel', hud, toX(293), toY(48), 'Base Lv.1', 33, TEXT_TEAL);
+        this.baseLabel = createLabel('BaseLabel', hud, toX(293), toY(48), `${CONFIG.texts.baseLabelPrefix}1`, 33, TEXT_TEAL);
 
         this.messageLabel = createLabel('MessageLabel', hud, toX(195), toY(116), MESSAGES[GoldRushPhase.Collect], 40, TEXT_WHITE);
     }
@@ -381,8 +406,8 @@ export class GoldRushView {
         const button = createNode('UpgradeButton', root, toX(195), toY(738));
         button.addComponent(UITransform).setContentSize(toW(250), toH(68));
         createBox('ButtonBg', button, 0, 0, toW(250), toH(68), BUTTON_GOLD, frames.button);
-        createLabel('ButtonTitle', button, 0, toH(7), 'UPGRADE', 44, BUTTON_TEXT);
-        createLabel('ButtonSub', button, 0, -toH(18), 'Spend 75 gold', 28, BUTTON_SUB_TEXT);
+        createLabel('ButtonTitle', button, 0, toH(7), CONFIG.texts.upgradeTitle, 44, BUTTON_TEXT);
+        createLabel('ButtonSub', button, 0, -toH(18), CONFIG.texts.upgradeSub, 28, BUTTON_SUB_TEXT);
         button.active = false;
         this.upgradeButton = button;
     }
@@ -421,8 +446,8 @@ export class GoldRushView {
         overlay.on(Node.EventType.TOUCH_END, () => undefined);
 
         createBox('Card', card, toX(195), toY(391), toW(302), toH(446), CARD);
-        createLabel('VictoryLabel', card, toX(195), toY(230), 'VICTORY', 70, CARD_TITLE);
-        createLabel('VictorySub', card, toX(195), toY(282), 'Gold secured. Base upgraded.', 35, CARD_SUB);
+        createLabel('VictoryLabel', card, toX(195), toY(230), CONFIG.texts.winTitle, 70, CARD_TITLE);
+        createLabel('VictorySub', card, toX(195), toY(282), CONFIG.texts.winSubtitle, 35, CARD_SUB);
 
         createBox('Medal', card, toX(195), toY(398), toW(152), toW(152), GOLD, frames.coin);
         createBox('Building', card, toX(195), toY(409), toW(106), toH(82), CARD_BUILDING);
@@ -431,7 +456,7 @@ export class GoldRushView {
         const cta = createNode('CtaButton', card, toX(195), toY(735));
         cta.addComponent(UITransform).setContentSize(toW(262), toH(70));
         createBox('CtaBg', cta, 0, 0, toW(262), toH(70), CTA_GOLD, frames.button);
-        createLabel('CtaLabel', cta, 0, 0, 'PLAY NOW', 48, CTA_TEXT);
+        createLabel('CtaLabel', cta, 0, 0, CONFIG.texts.cta, 48, CTA_TEXT);
         this.ctaButton = cta;
     }
 
@@ -547,7 +572,7 @@ export class GoldRushView {
             this.lastGoldText = goldText;
         }
 
-        const baseText = `Base Lv.${snapshot.upgradeLevel + 1}`;
+        const baseText = `${CONFIG.texts.baseLabelPrefix}${snapshot.upgradeLevel + 1}`;
         if (this.baseLabel && baseText !== this.lastBaseText) {
             this.baseLabel.string = baseText;
             this.lastBaseText = baseText;
