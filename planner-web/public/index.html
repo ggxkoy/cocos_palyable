@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="输入参考视频链接或上传视频文件，生成结构化 Cocos Playable 策划案。">
+    <title>Playable 策划案生成器</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">P</span>
+            <div>
+                <strong>Playable Planner</strong>
+                <span>视频 → 策划案</span>
+            </div>
+        </div>
+        <button class="ghost-button" id="shareButton" type="button" title="复制当前分享地址">
+            复制分享链接
+        </button>
+    </header>
+
+    <main class="workspace">
+        <section class="intro" aria-labelledby="pageTitle">
+            <p class="eyebrow">PLAYABLE WORKFLOW</p>
+            <h1 id="pageTitle">从参考视频生成可执行策划案</h1>
+            <p>粘贴抖音、B 站、YouTube 链接，或直接上传视频文件。系统优先输出可执行策划案，关键帧与素材处理仅用于支撑玩法判断。</p>
+        </section>
+
+        <section class="generator" aria-label="策划案生成表单">
+            <form id="generatorForm" novalidate>
+                <div class="mode-switch" role="group" aria-label="选择视频输入方式">
+                    <button class="mode-button active" id="linkModeButton" type="button" aria-pressed="true">视频链接</button>
+                    <button class="mode-button" id="uploadModeButton" type="button" aria-pressed="false">上传文件</button>
+                </div>
+
+                <div id="linkInputPanel">
+                    <label for="videoUrl">参考视频链接</label>
+                    <div class="url-row">
+                        <input id="videoUrl" name="videoUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com/video">
+                        <button class="paste-button" id="pasteButton" type="button">粘贴</button>
+                    </div>
+                    <p class="field-help" id="fieldHelp">支持平台页面链接和 .mp4 / .mov / .webm 直链</p>
+                </div>
+
+                <div id="uploadInputPanel" hidden>
+                    <label for="videoFile">上传参考视频</label>
+                    <label class="upload-drop-zone" id="uploadDropZone" for="videoFile">
+                        <input id="videoFile" name="videoFile" type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm">
+                        <span class="upload-icon" aria-hidden="true">↑</span>
+                        <strong id="uploadTitle">选择视频文件或拖到这里</strong>
+                        <span id="uploadMeta">MP4、MOV、WEBM，最大 500 MB</span>
+                    </label>
+                    <p class="field-help" id="uploadHelp">视频只保存在运行服务的项目目录中</p>
+                </div>
+
+                <div class="model-settings">
+                    <label>
+                        <span>Agent 运行器</span>
+                        <select id="agentProvider" name="agentProvider">
+                            <option value="codex">Codex（独立分析）</option>
+                            <option value="claude">Claude Code</option>
+                            <option value="opencode">OpenCode</option>
+                            <option value="openclaw">OpenClaw</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>模型提供方</span>
+                        <select id="modelProvider" name="modelProvider">
+                            <option value="default">运行器默认模型</option>
+                            <option value="deepseek">DeepSeek</option>
+                            <option value="glm">智谱 GLM</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>模型标识（可选）</span>
+                        <input id="modelName" name="modelName" type="text" maxlength="80" autocomplete="off" placeholder="留空使用默认模型">
+                    </label>
+                </div>
+                <p class="model-help" id="modelHelp">策划案结构沿用现有工作流，内容判断由所选 Agent 和模型独立完成。API Key 只在服务端配置。</p>
+
+                <button class="primary-button" id="submitButton" type="submit">
+                    <span id="submitLabel">生成策划案</span>
+                    <span aria-hidden="true">→</span>
+                </button>
+            </form>
+
+            <div class="workflow-strip" aria-label="处理流程">
+                <div data-step="source"><span>1</span><strong>获取视频</strong></div>
+                <div data-step="frames"><span>2</span><strong>分析关键帧</strong></div>
+                <div data-step="plan"><span>3</span><strong>输出策划案</strong></div>
+            </div>
+        </section>
+
+        <section class="job-panel" id="jobPanel" aria-live="polite">
+            <div class="job-heading">
+                <div>
+                    <p class="section-label">任务状态</p>
+                    <h2 id="jobTitle">等待提交</h2>
+                </div>
+                <span class="status-badge idle" id="statusBadge">未开始</span>
+            </div>
+            <p class="job-message" id="jobMessage">提交视频链接或文件后，生成进度会显示在这里。</p>
+            <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
+            <details class="log-panel" id="logPanel">
+                <summary>查看处理日志</summary>
+                <pre id="jobLog">暂无日志</pre>
+            </details>
+        </section>
+
+        <section class="result-panel" id="resultPanel" hidden>
+            <div class="result-heading">
+                <div>
+                    <p class="section-label">生成结果</p>
+                    <h2 id="resultName">策划案</h2>
+                </div>
+                <div class="result-actions">
+                    <button class="secondary-button" id="copyResultButton" type="button">复制全文</button>
+                    <a class="primary-link" id="downloadLink" href="#">下载 Markdown</a>
+                </div>
+            </div>
+            <pre class="document-preview" id="documentPreview"></pre>
+        </section>
+    </main>
+
+    <footer>
+        <span>输出目录：docs/design/</span>
+        <span id="agentLabel">正在检查服务</span>
+    </footer>
+
+    <script src="/app.js" defer></script>
+</body>
+</html>

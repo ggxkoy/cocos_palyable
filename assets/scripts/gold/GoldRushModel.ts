@@ -1,4 +1,7 @@
+import { GOLD_RUSH_CONFIG } from './GoldRushConfig';
 import { GoldCrate, GoldRushPhase, GoldRushSnapshot } from './GoldRushTypes';
+
+const CONFIG = GOLD_RUSH_CONFIG;
 
 export class GoldRushModel {
     public phase: GoldRushPhase = GoldRushPhase.Collect;
@@ -22,7 +25,7 @@ export class GoldRushModel {
         }
 
         crate.collected = true;
-        this.gold += 25;
+        this.gold += CONFIG.crateReward;
 
         if (this.crates.every(item => item.collected)) {
             this.phase = GoldRushPhase.Upgrade;
@@ -32,11 +35,11 @@ export class GoldRushModel {
     }
 
     public upgradeBase(): boolean {
-        if (this.phase !== GoldRushPhase.Upgrade || this.gold < 75) {
+        if (this.phase !== GoldRushPhase.Upgrade || this.gold < CONFIG.upgradeCost) {
             return false;
         }
 
-        this.gold -= 75;
+        this.gold -= CONFIG.upgradeCost;
         this.upgradeLevel = 1;
         this.phase = GoldRushPhase.Battle;
         return true;
@@ -47,7 +50,7 @@ export class GoldRushModel {
             return;
         }
 
-        this.battleProgress = Math.min(1, this.battleProgress + deltaTime * 0.28);
+        this.battleProgress = Math.min(1, this.battleProgress + deltaTime * CONFIG.battleSpeed);
         if (this.battleProgress >= 1) {
             this.phase = GoldRushPhase.End;
         }
