@@ -41,10 +41,13 @@ Cocos Creator 打开 assets/scenes/<模板>.scene 预览
 | merge | merge | assets/scripts/merge/ | 拖同级物品合成升级 → 达到目标等级结算 | background/cell/item/button/hand |
 | match3 | match3 | assets/scripts/match3/ | 点选交换、三连消除 → 限步达分结算 | background/gem/button/hand |
 | runner | runner | assets/scripts/runner/ | 点左右切道躲障碍吃金币 → 限时跑完/撞车结算 | background/player/obstacle/coin/button/hand |
+| crew | crew | assets/scripts/crew/ | 行为树工人自主「采集→搬运→入库」，玩家点雇佣/解锁 → 繁荣演出结算（解压经营型首选；换一棵树即可做战斗人物） | background/mine/depot/worker/button/hand |
 
 共享层（`assets/scripts/common/`）：PlaceholderFactory（box/label/手指占位）、
 PlayableSdk（多平台 CTA download 链 + ad-event pause/resume）、SparkSystem（火花粒子）、
-EndCard（结算卡）、Layout（坐标换算）、TemplateBootstrap（场景→组件注册表）。
+EndCard（结算卡）、Layout（坐标换算）、TemplateBootstrap（场景→组件注册表）、
+BehaviorTree（Sequence/Selector/Condition/Action/Repeat，驱动自主人物：
+经营型工人循环与战斗型士兵行为共用同一套节点，只换树的结构）。
 
 ## 验证手段（无编辑器环境可用）
 

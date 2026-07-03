@@ -1,4 +1,5 @@
 import { Component, Director, director } from 'cc';
+import { CrewGame } from '../crew/CrewGame';
 import { GoldRushGame } from '../gold/GoldRushGame';
 import { Match3Game } from '../match3/Match3Game';
 import { MergeGame } from '../merge/MergeGame';
@@ -14,6 +15,7 @@ const TEMPLATES: Record<string, new (...args: never[]) => Component> = {
     merge: MergeGame,
     match3: Match3Game,
     runner: RunnerGame,
+    crew: CrewGame,
 };
 
 // Project scripts run at engine startup, so this module wires the ad SDK and

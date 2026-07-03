@@ -11,7 +11,7 @@
 | 分析日期 | {YYYY-MM-DD} |
 | 视频时长 | {秒} |
 | 目标结构 | {战斗压力型（收集→转化战斗力→战斗验证）\| 解压经营型（小循环嵌套大循环）} |
-| 模板类型 | {collect-upgrade \| towerdefense \| merge \| match3 \| runner \| custom} |
+| 模板类型 | {collect-upgrade \| towerdefense \| merge \| match3 \| runner \| crew \| custom} |
 | 对应场景 | {maingame \| towerdefense \| merge \| match3 \| runner} |
 | 屏幕方向 | 竖屏 720x1280 |
 | 推广产品 | {游戏名} |
