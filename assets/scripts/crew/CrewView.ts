@@ -25,6 +25,9 @@ const ZONE_GROUND = new Color(84, 62, 42, 255);
 const ZONE_LOCKED = new Color(52, 46, 40, 255);
 const LOCK = new Color(30, 26, 22, 255);
 const VEIN_GOLD = new Color(232, 170, 48, 255);
+const VAULT_LOCKED = new Color(70, 60, 50, 255);
+const VAULT_OPEN = new Color(240, 186, 60, 255);
+const VAULT_DOOR = new Color(44, 38, 32, 255);
 const DEPOT = new Color(94, 70, 128, 255);
 const DEPOT_STACK = new Color(255, 216, 95, 255);
 const WORKER_BODY = new Color(224, 140, 60, 255);
@@ -48,8 +51,12 @@ interface PadView {
     readonly purchaseId: string;
     readonly node: Node;
     readonly bgSprite: Sprite | null;
+    readonly label: Label;
+    readonly baseText: string;
+    readonly costText: string;
     readonly webX: number;
     readonly webY: number;
+    lastText: string;
 }
 
 interface ZoneView {
@@ -71,6 +78,8 @@ export class CrewView {
     private readonly veinNodes = new Map<number, Node>();
     private readonly workerViews = new Map<number, WorkerView>();
     private workerLayer: Node | null = null;
+    private vaultBody: Sprite | null = null;
+    private vaultLock: Node | null = null;
     private sparks: SparkSystem | null = null;
     private hand: Node | null = null;
     private endCard: EndCardHandles | null = null;
@@ -92,6 +101,15 @@ export class CrewView {
             createBox('River', root, 0, toY(470), DESIGN_WIDTH, toH(56), WATER);
             createBox('Bridge', root, toX(195), toY(470), toW(90), toH(64), BRIDGE);
         }
+
+        // 长期锚点：金库从第一帧就矗立在地图顶部，作为整局的终极目标。
+        const vault = CONFIG.stations.vault;
+        const vaultNode = createNode('Vault', root, toX(vault.x), toY(vault.y));
+        const vaultBody = createBox('VaultBody', vaultNode, 0, 0, toW(170), toW(110), VAULT_LOCKED);
+        createBox('VaultDoor', vaultNode, 0, -toW(8), toW(64), toW(70), VAULT_DOOR);
+        const vaultLock = createBox('VaultLock', vaultNode, 0, toW(4), toW(30), toW(36), LOCK);
+        this.vaultBody = vaultBody.getComponent(Sprite);
+        this.vaultLock = vaultLock;
 
         // 矿区地块 + 矿脉（矿脉节点按 Model 的 id 顺序构建：区域 × 偏移）。
         let veinId = 1;
@@ -131,6 +149,7 @@ export class CrewView {
         this.syncWorkers(model);
         this.refreshZones(model);
         this.refreshVeins(model);
+        this.refreshVault(model);
         this.refreshPads(model);
         this.tickHand(time, model);
         this.tickHud(model);
@@ -160,13 +179,18 @@ export class CrewView {
             const bg = createBox('PadBg', node, 0, 0, toW(96), toH(64), PAD, frames.button);
             const kindText = entry.kind === 'hire' ? CONFIG.texts.hireLabel : CONFIG.texts.unlockLabel;
             const costText = entry.cost > 0 ? `${entry.cost}` : CONFIG.texts.freeLabel;
-            createLabel('PadLabel', node, 0, 0, `${kindText} ${costText}`, 26, PAD_TEXT);
+            const text = `${kindText} ${costText}`;
+            const label = createLabel('PadLabel', node, 0, 0, text, 26, PAD_TEXT);
             this.pads.push({
                 purchaseId: entry.id,
                 node,
                 bgSprite: bg.getComponent(Sprite),
+                label,
+                baseText: kindText,
+                costText,
                 webX: entry.x,
                 webY: entry.y,
+                lastText: text,
             });
         }
     }
@@ -257,11 +281,35 @@ export class CrewView {
                 continue;
             }
             shownPositions.add(key);
-            if (pad.bgSprite && purchase) {
-                const target = model.canAfford(purchase) ? PAD : PAD_DISABLED;
+            if (!purchase) {
+                continue;
+            }
+            const affordable = model.canAfford(purchase);
+            if (pad.bgSprite) {
+                const target = affordable ? PAD : PAD_DISABLED;
                 if (!colorEquals(pad.bgSprite.color, target)) {
                     pad.bgSprite.color = target.clone();
                 }
+            }
+            // 未达标时实时显示「当前金币/价格」，让下一个目标的进度始终可见。
+            const text = affordable || purchase.cost === 0
+                ? `${pad.baseText} ${pad.costText}`
+                : `${pad.baseText} ${model.gold}/${purchase.cost}`;
+            if (text !== pad.lastText) {
+                pad.label.string = text;
+                pad.lastText = text;
+            }
+        }
+    }
+
+    private refreshVault(model: CrewModel): void {
+        if (this.vaultLock) {
+            this.vaultLock.active = !model.vaultOpened;
+        }
+        if (this.vaultBody) {
+            const target = model.vaultOpened ? VAULT_OPEN : VAULT_LOCKED;
+            if (!colorEquals(this.vaultBody.color, target)) {
+                this.vaultBody.color = target.clone();
             }
         }
     }
@@ -315,6 +363,7 @@ export class CrewView {
         }
         this.boomBurstTimer = CONFIG.boomBurstInterval;
         const spots = [
+            CONFIG.stations.vault,
             ...model.zones.filter(zone => zone.unlocked).map(zone => ({ x: zone.x, y: zone.y })),
             CONFIG.stations.depot,
         ];

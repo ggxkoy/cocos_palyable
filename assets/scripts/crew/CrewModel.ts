@@ -33,6 +33,8 @@ export class CrewModel {
         purchased: false,
     }));
 
+    public vaultOpened = false;
+
     private readonly trees = new Map<number, { tree: BtNode<WorkerContext>; context: WorkerContext }>();
     private readonly depositEvents: FxEvent[] = [];
     private readonly strikeEvents: FxEvent[] = [];
@@ -65,13 +67,15 @@ export class CrewModel {
         return this.gold >= purchase.cost;
     }
 
+    // 目标链严格按顺序：只有「下一个目标」可被购买，保证每个循环闭合时
+    // 玩家面前立刻有新目标，而不是重复上一个循环。
     public tapPurchase(purchaseId: string): boolean {
         if (this.phase !== CrewPhase.Guide && this.phase !== CrewPhase.Manage) {
             return false;
         }
 
-        const purchase = this.purchases.find(item => item.id === purchaseId);
-        if (!purchase || purchase.purchased || !this.canAfford(purchase)) {
+        const purchase = this.nextPurchase();
+        if (!purchase || purchase.id !== purchaseId || !this.canAfford(purchase)) {
             return false;
         }
 
@@ -80,11 +84,14 @@ export class CrewModel {
 
         if (purchase.kind === 'hire') {
             this.spawnWorker();
-        } else {
+        } else if (purchase.kind === 'unlock') {
             const locked = this.zones.find(zone => !zone.unlocked);
             if (locked) {
                 locked.unlocked = true;
             }
+        } else {
+            // 终极目标：打开金库即进入繁荣结算。
+            this.openVault();
         }
 
         if (this.phase === CrewPhase.Guide && this.workers.length > 0) {
@@ -110,11 +117,9 @@ export class CrewModel {
             return;
         }
 
-        const allPurchased = this.purchases.every(purchase => purchase.purchased);
-        const boomReady = allPurchased && this.gold >= CONFIG.boomGoldTarget;
-        if (boomReady || this.elapsed >= CONFIG.maxDuration) {
-            this.phase = CrewPhase.Boom;
-            this.boomTimer = CONFIG.boomDuration;
+        // 安全上限：到时长直接打开金库收尾，保证任何玩家都能看到结局。
+        if (this.elapsed >= CONFIG.maxDuration) {
+            this.openVault();
         }
     }
 
@@ -124,6 +129,12 @@ export class CrewModel {
 
     public drainStrikeEvents(): FxEvent[] {
         return this.strikeEvents.splice(0, this.strikeEvents.length);
+    }
+
+    private openVault(): void {
+        this.vaultOpened = true;
+        this.phase = CrewPhase.Boom;
+        this.boomTimer = CONFIG.boomDuration;
     }
 
     private tickVeins(deltaTime: number): void {

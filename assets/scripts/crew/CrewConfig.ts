@@ -31,12 +31,17 @@ export const CREW_CONFIG = {
         ],
         depot: { x: 195, y: 585 },
         workerSpawn: { x: 195, y: 650 },
+        // 长期锚点：金库从第一帧就矗立在地图顶部，是整局的终极目标；
+        // 角色高约 34（画面高 844 的 4%），地图纵向足够摆下「金库-矿区-仓库-操作区」四层。
+        vault: { x: 195, y: 150 },
     },
-    // 购买项按顺序引导：首个工人免费（引导期），之后雇工与解锁 2 号矿区。
+    // 目标链：每完成一个购买，下一个目标已经在场上（牌子/锁定建筑开局全部可见），
+    // 严格按顺序解锁；最后一环是打开金库，直接触发繁荣结算。
     purchases: [
         { id: 'hire1', kind: 'hire', cost: 0, x: 120, y: 706 },
         { id: 'hire2', kind: 'hire', cost: 20, x: 120, y: 706 },
         { id: 'zone2', kind: 'unlock', cost: 40, x: 270, y: 706 },
+        { id: 'vault', kind: 'vault', cost: 60, x: 195, y: 236 },
     ],
     startGold: 0,
     workerSpeed: 150,
@@ -50,7 +55,6 @@ export const CREW_CONFIG = {
     veinRespawn: 2.5,
     depositTime: 0.3,
     goldPerBar: 5,
-    boomGoldTarget: 50,
     boomDuration: 2.6,
     boomBurstInterval: 0.4,
     // 安全上限：无论经营进度如何，到时长直接进入 boom 收尾。

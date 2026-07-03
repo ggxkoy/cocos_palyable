@@ -5,7 +5,7 @@ export enum CrewPhase {
     End = 'end',
 }
 
-export type PurchaseKind = 'hire' | 'unlock';
+export type PurchaseKind = 'hire' | 'unlock' | 'vault';
 
 export interface Purchase {
     readonly id: string;
