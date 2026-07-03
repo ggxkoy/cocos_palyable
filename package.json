@@ -9,9 +9,12 @@
   "description": "Cocos Creator 3.8 playable rebuilds: gold rush slice plus tower-defense slice.",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "serve": "npx http-server . -p 4173"
+    "serve": "npx http-server . -p 4173",
+    "planner:start": "node planner-web/server.mjs"
   },
   "devDependencies": {
+    "@openai/codex": "^0.142.5",
+    "@openai/codex-win32-x64": "npm:@openai/codex@^0.142.5-win32-x64",
     "typescript": "^4.9.5"
   }
 }

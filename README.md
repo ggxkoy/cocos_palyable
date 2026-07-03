@@ -4,6 +4,38 @@
 
 ## 快速开始
 
+### 网页入口（便于分享）
+
+```bash
+npm ci
+npm run planner:start
+```
+
+浏览器打开 `http://127.0.0.1:4310`，输入视频链接或上传 MP4/MOV/WEBM 文件即可调用现有
+`video-to-design` 流程，生成结果会保存到 `docs/design/` 并显示在网页中。
+Agent 运行器支持 Codex、Claude Code、OpenCode、OpenClaw。OpenCode / OpenClaw 可进一步选择
+DeepSeek、智谱 GLM 或自定义 `provider/model`；模型留空时使用网页中的推荐默认值。
+
+API Key 只在运行服务的电脑上配置，不会发送到网页：
+
+```powershell
+$env:DEEPSEEK_API_KEY="..."
+$env:ZHIPUAI_API_KEY="..."  # 也兼容 ZAI_API_KEY
+npm run planner:start
+```
+
+局域网分享：
+
+```bash
+npm run planner:start -- --host 0.0.0.0
+```
+
+服务会在终端打印带临时访问密钥的局域网地址，直接把完整地址发给同一局域网内的使用者。
+运行服务的电脑必须安装并登录至少一个 Agent CLI；`PLANNER_AGENT=codex|claude|opencode|openclaw`
+可设置网页默认运行器。非标准安装路径可通过 `PLANNER_CODEX_BIN`、`PLANNER_CLAUDE_BIN`、
+`PLANNER_OPENCODE_BIN`、`PLANNER_OPENCLAW_BIN` 指定。
+不要把该服务直接暴露到公网，公网部署应增加正式身份认证和任务配额。
+
 ### 用工作流（推荐）
 
 1. 把参考视频放进 `reference/incoming/` 并提交。
