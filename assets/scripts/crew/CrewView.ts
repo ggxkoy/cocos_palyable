@@ -1,4 +1,4 @@
-import { Color, Label, Node, Sprite, SpriteFrame, UIOpacity, UITransform } from 'cc';
+import { Color, Label, Node, Sprite, SpriteFrame, UITransform } from 'cc';
 import { buildEndCard, EndCardHandles } from '../common/EndCard';
 import { DESIGN_HEIGHT, DESIGN_WIDTH, toH, toW, toX, toY } from '../common/Layout';
 import { createBox, createHandHint, createLabel, createNode } from '../common/PlaceholderFactory';
@@ -11,7 +11,7 @@ const CONFIG = CREW_CONFIG;
 
 export interface CrewFrames {
     readonly background: SpriteFrame | null;
-    readonly mine: SpriteFrame | null;
+    readonly vein: SpriteFrame | null;
     readonly depot: SpriteFrame | null;
     readonly worker: SpriteFrame | null;
     readonly button: SpriteFrame | null;
@@ -20,8 +20,11 @@ export interface CrewFrames {
 
 const GROUND = new Color(58, 42, 30, 255);
 const WATER = new Color(52, 130, 176, 255);
-const MINE_GOLD = new Color(232, 170, 48, 255);
-const MINE_LOCKED = new Color(88, 78, 66, 255);
+const BRIDGE = new Color(150, 112, 70, 255);
+const ZONE_GROUND = new Color(84, 62, 42, 255);
+const ZONE_LOCKED = new Color(52, 46, 40, 255);
+const LOCK = new Color(30, 26, 22, 255);
+const VEIN_GOLD = new Color(232, 170, 48, 255);
 const DEPOT = new Color(94, 70, 128, 255);
 const DEPOT_STACK = new Color(255, 216, 95, 255);
 const WORKER_BODY = new Color(224, 140, 60, 255);
@@ -45,15 +48,13 @@ interface PadView {
     readonly purchaseId: string;
     readonly node: Node;
     readonly bgSprite: Sprite | null;
-    readonly label: Label;
     readonly webX: number;
     readonly webY: number;
 }
 
-interface MineView {
+interface ZoneView {
     readonly id: number;
-    readonly node: Node;
-    readonly disc: Sprite | null;
+    readonly ground: Sprite | null;
     readonly lock: Node;
 }
 
@@ -66,7 +67,8 @@ export class CrewView {
     public readonly pads: PadView[] = [];
 
     private frames: CrewFrames | null = null;
-    private readonly mineViews: MineView[] = [];
+    private readonly zoneViews: ZoneView[] = [];
+    private readonly veinNodes = new Map<number, Node>();
     private readonly workerViews = new Map<number, WorkerView>();
     private workerLayer: Node | null = null;
     private sparks: SparkSystem | null = null;
@@ -88,14 +90,21 @@ export class CrewView {
         createBox('Background', root, 0, 0, DESIGN_WIDTH, DESIGN_HEIGHT, GROUND, frames.background);
         if (!frames.background) {
             createBox('River', root, 0, toY(470), DESIGN_WIDTH, toH(56), WATER);
-            createBox('Bridge', root, toX(195), toY(470), toW(90), toH(64), new Color(150, 112, 70, 255));
+            createBox('Bridge', root, toX(195), toY(470), toW(90), toH(64), BRIDGE);
         }
 
-        for (const mine of CONFIG.stations.mines) {
-            const node = createNode(`Mine${mine.id}`, root, toX(mine.x), toY(mine.y));
-            const disc = createBox('Disc', node, 0, 0, toW(140), toW(100), MINE_LOCKED, frames.mine);
-            const lock = createBox('Lock', node, 0, 0, toW(34), toW(40), new Color(40, 34, 28, 255));
-            this.mineViews.push({ id: mine.id, node, disc: disc.getComponent(Sprite), lock });
+        // 矿区地块 + 矿脉（矿脉节点按 Model 的 id 顺序构建：区域 × 偏移）。
+        let veinId = 1;
+        for (const zone of CONFIG.stations.zones) {
+            const zoneNode = createNode(`Zone${zone.id}`, root, toX(zone.x), toY(zone.y));
+            const ground = createBox('ZoneGround', zoneNode, 0, 0, toW(150), toW(112), ZONE_LOCKED);
+            for (const offset of CONFIG.stations.veinOffsets) {
+                const vein = createBox(`Vein${veinId}`, zoneNode, toW(offset.x), -toW(offset.y), toW(34), toW(26), VEIN_GOLD, frames.vein);
+                this.veinNodes.set(veinId, vein);
+                veinId += 1;
+            }
+            const lock = createBox('Lock', zoneNode, 0, 0, toW(34), toW(40), LOCK);
+            this.zoneViews.push({ id: zone.id, ground: ground.getComponent(Sprite), lock });
         }
 
         const depot = CONFIG.stations.depot;
@@ -120,15 +129,19 @@ export class CrewView {
 
     public tick(deltaTime: number, time: number, model: CrewModel): void {
         this.syncWorkers(model);
-        this.refreshStations(model);
+        this.refreshZones(model);
+        this.refreshVeins(model);
         this.refreshPads(model);
         this.tickHand(time, model);
         this.tickHud(model);
         this.tickPhase(model);
         this.tickBoom(deltaTime, model);
 
-        for (const event of model.drainDepositEvents()) {
-            this.sparks?.burst(event.x, event.y - 10, 8);
+        for (const strike of model.drainStrikeEvents()) {
+            this.sparks?.burst(strike.x, strike.y, 4);
+        }
+        for (const deposit of model.drainDepositEvents()) {
+            this.sparks?.burst(deposit.x, deposit.y - 10, 8);
         }
         this.sparks?.tick(deltaTime);
     }
@@ -147,12 +160,11 @@ export class CrewView {
             const bg = createBox('PadBg', node, 0, 0, toW(96), toH(64), PAD, frames.button);
             const kindText = entry.kind === 'hire' ? CONFIG.texts.hireLabel : CONFIG.texts.unlockLabel;
             const costText = entry.cost > 0 ? `${entry.cost}` : CONFIG.texts.freeLabel;
-            const label = createLabel('PadLabel', node, 0, 0, `${kindText} ${costText}`, 26, PAD_TEXT);
+            createLabel('PadLabel', node, 0, 0, `${kindText} ${costText}`, 26, PAD_TEXT);
             this.pads.push({
                 purchaseId: entry.id,
                 node,
                 bgSprite: bg.getComponent(Sprite),
-                label,
                 webX: entry.x,
                 webY: entry.y,
             });
@@ -200,18 +212,34 @@ export class CrewView {
         return { node, bars };
     }
 
-    private refreshStations(model: CrewModel): void {
-        for (const mine of model.mines) {
-            const view = this.mineViews.find(item => item.id === mine.id);
+    private refreshZones(model: CrewModel): void {
+        for (const zone of model.zones) {
+            const view = this.zoneViews.find(item => item.id === zone.id);
             if (!view) {
                 continue;
             }
-            view.lock.active = !mine.unlocked;
-            if (view.disc) {
-                const target = mine.unlocked ? MINE_GOLD : MINE_LOCKED;
-                if (!colorEquals(view.disc.color, target)) {
-                    view.disc.color = target.clone();
+            view.lock.active = !zone.unlocked;
+            if (view.ground) {
+                const target = zone.unlocked ? ZONE_GROUND : ZONE_LOCKED;
+                if (!colorEquals(view.ground.color, target)) {
+                    view.ground.color = target.clone();
                 }
+            }
+        }
+    }
+
+    // 矿脉随库存缩放，敲空即隐藏，重生后恢复。
+    private refreshVeins(model: CrewModel): void {
+        for (const vein of model.veins) {
+            const node = this.veinNodes.get(vein.id);
+            if (!node) {
+                continue;
+            }
+            const unlocked = model.zones.find(zone => zone.id === vein.zoneId)?.unlocked ?? false;
+            node.active = unlocked && vein.stock > 0;
+            if (node.active) {
+                const scale = 0.55 + 0.45 * (vein.stock / CONFIG.veinStock);
+                node.setScale(scale, scale, 1);
             }
         }
     }
@@ -276,7 +304,7 @@ export class CrewView {
         }
     }
 
-    // 繁荣演出：boom 期间矿点与仓库轮流喷金。
+    // 繁荣演出：boom 期间矿区与仓库轮流喷金。
     private tickBoom(deltaTime: number, model: CrewModel): void {
         if (model.phase !== CrewPhase.Boom) {
             return;
@@ -287,7 +315,7 @@ export class CrewView {
         }
         this.boomBurstTimer = CONFIG.boomBurstInterval;
         const spots = [
-            ...model.mines.filter(mine => mine.unlocked).map(mine => ({ x: mine.x, y: mine.y })),
+            ...model.zones.filter(zone => zone.unlocked).map(zone => ({ x: zone.x, y: zone.y })),
             CONFIG.stations.depot,
         ];
         const spot = spots[Math.floor(Math.random() * spots.length)];

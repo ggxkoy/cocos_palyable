@@ -13,7 +13,7 @@ export class CrewGame extends Component {
     public backgroundFrame: SpriteFrame | null = null;
 
     @property(SpriteFrame)
-    public mineFrame: SpriteFrame | null = null;
+    public veinFrame: SpriteFrame | null = null;
 
     @property(SpriteFrame)
     public depotFrame: SpriteFrame | null = null;
@@ -37,7 +37,7 @@ export class CrewGame extends Component {
     protected onLoad(): void {
         this.view.build(this.node, {
             background: this.backgroundFrame,
-            mine: this.mineFrame,
+            vein: this.veinFrame,
             depot: this.depotFrame,
             worker: this.workerFrame,
             button: this.buttonFrame,
