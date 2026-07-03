@@ -34,6 +34,20 @@ export interface Vein {
 
 export type WorkerTask = 'rally' | 'approach' | 'strike' | 'toDepot' | 'deposit';
 
+export type ChiefMode = 'idle' | 'strike' | 'deposit';
+
+// 主角：移动完全由玩家驱动（点击目的地），停手即停在原地；
+// 只有「范围内自动交互」（挨着矿脉自动开采、挨着仓库自动投递）是自动的。
+export interface Chief {
+    x: number;
+    y: number;
+    carrying: number;
+    actionTimer: number;
+    mode: ChiefMode;
+    moveTargetX: number | null;
+    moveTargetY: number | null;
+}
+
 export interface Worker {
     readonly id: number;
     x: number;

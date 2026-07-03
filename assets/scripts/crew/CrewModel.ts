@@ -1,6 +1,6 @@
 import { Action, BtNode, BtStatus, Condition, Repeat, Selector, Sequence } from '../common/BehaviorTree';
 import { CREW_CONFIG } from './CrewConfig';
-import { CrewPhase, Purchase, Vein, Worker, Zone } from './CrewTypes';
+import { Chief, CrewPhase, Purchase, Vein, Worker, Zone } from './CrewTypes';
 
 const CONFIG = CREW_CONFIG;
 
@@ -34,6 +34,17 @@ export class CrewModel {
     }));
 
     public vaultOpened = false;
+
+    // 主角：移动只响应玩家指令，没有指令就停在原地。
+    public readonly chief: Chief = {
+        x: CONFIG.stations.workerSpawn.x,
+        y: CONFIG.stations.workerSpawn.y,
+        carrying: 0,
+        actionTimer: 0,
+        mode: 'idle',
+        moveTargetX: null,
+        moveTargetY: null,
+    };
 
     private readonly trees = new Map<number, { tree: BtNode<WorkerContext>; context: WorkerContext }>();
     private readonly depositEvents: FxEvent[] = [];
@@ -100,6 +111,15 @@ export class CrewModel {
         return true;
     }
 
+    // 玩家点击地面下达移动指令；这是主角位移的唯一来源。
+    public commandMove(webX: number, webY: number): void {
+        if (this.phase === CrewPhase.End) {
+            return;
+        }
+        this.chief.moveTargetX = Math.max(24, Math.min(366, webX));
+        this.chief.moveTargetY = Math.max(60, Math.min(800, webY));
+    }
+
     public update(deltaTime: number): void {
         if (this.phase === CrewPhase.End) {
             return;
@@ -107,6 +127,7 @@ export class CrewModel {
 
         this.elapsed += deltaTime;
         this.tickVeins(deltaTime);
+        this.tickChief(deltaTime);
         this.tickWorkers(deltaTime);
 
         if (this.phase === CrewPhase.Boom) {
@@ -114,13 +135,8 @@ export class CrewModel {
             if (this.boomTimer <= 0) {
                 this.phase = CrewPhase.End;
             }
-            return;
         }
-
-        // 安全上限：到时长直接打开金库收尾，保证任何玩家都能看到结局。
-        if (this.elapsed >= CONFIG.maxDuration) {
-            this.openVault();
-        }
+        // 没有任何自动推进：结算只能由玩家点开金库触发。
     }
 
     public drainDepositEvents(): FxEvent[] {
@@ -135,6 +151,63 @@ export class CrewModel {
         this.vaultOpened = true;
         this.phase = CrewPhase.Boom;
         this.boomTimer = CONFIG.boomDuration;
+    }
+
+    // 主角：先消费玩家的移动指令，再做「范围内自动交互」——
+    // 挨着矿脉自动开采、背满且挨着仓库自动投递；其余时间原地待命。
+    private tickChief(deltaTime: number): void {
+        const chief = this.chief;
+        if (chief.moveTargetX !== null && chief.moveTargetY !== null) {
+            if (this.moveToward(chief, chief.moveTargetX, chief.moveTargetY, deltaTime)) {
+                chief.moveTargetX = null;
+                chief.moveTargetY = null;
+            }
+        }
+
+        if (chief.carrying < CONFIG.workerCapacity) {
+            const vein = this.veins.find(item => item.stock > 0
+                && this.isZoneUnlocked(item.zoneId)
+                && Math.hypot(item.x - chief.x, item.y - chief.y) <= CONFIG.actionRange);
+            if (vein) {
+                this.setChiefMode('strike');
+                chief.actionTimer += deltaTime;
+                while (chief.actionTimer >= CONFIG.strikeInterval && vein.stock > 0 && chief.carrying < CONFIG.workerCapacity) {
+                    chief.actionTimer -= CONFIG.strikeInterval;
+                    vein.stock -= 1;
+                    chief.carrying += CONFIG.yieldPerStrike;
+                    this.strikeEvents.push({ x: vein.x, y: vein.y, amount: CONFIG.yieldPerStrike });
+                    if (vein.stock <= 0) {
+                        vein.respawnTimer = CONFIG.veinRespawn;
+                    }
+                }
+                return;
+            }
+        }
+
+        if (chief.carrying > 0) {
+            const depot = CONFIG.stations.depot;
+            if (Math.hypot(depot.x - chief.x, depot.y - chief.y) <= CONFIG.actionRange + 24) {
+                this.setChiefMode('deposit');
+                chief.actionTimer += deltaTime;
+                if (chief.actionTimer >= CONFIG.depositTime) {
+                    chief.actionTimer = 0;
+                    const amount = chief.carrying * CONFIG.goldPerBar;
+                    chief.carrying = 0;
+                    this.gold += amount;
+                    this.depositEvents.push({ x: chief.x, y: chief.y, amount });
+                }
+                return;
+            }
+        }
+
+        this.setChiefMode('idle');
+    }
+
+    private setChiefMode(mode: Chief['mode']): void {
+        if (this.chief.mode !== mode) {
+            this.chief.mode = mode;
+            this.chief.actionTimer = 0;
+        }
     }
 
     private tickVeins(deltaTime: number): void {
@@ -317,18 +390,18 @@ export class CrewModel {
         return best;
     }
 
-    private moveToward(worker: Worker, targetX: number, targetY: number, deltaTime: number): boolean {
-        const dx = targetX - worker.x;
-        const dy = targetY - worker.y;
+    private moveToward(unit: { x: number; y: number }, targetX: number, targetY: number, deltaTime: number): boolean {
+        const dx = targetX - unit.x;
+        const dy = targetY - unit.y;
         const distance = Math.hypot(dx, dy);
         const step = CONFIG.workerSpeed * deltaTime;
         if (distance <= step || distance < 1) {
-            worker.x = targetX;
-            worker.y = targetY;
+            unit.x = targetX;
+            unit.y = targetY;
             return true;
         }
-        worker.x += (dx / distance) * step;
-        worker.y += (dy / distance) * step;
+        unit.x += (dx / distance) * step;
+        unit.y += (dy / distance) * step;
         return false;
     }
 }

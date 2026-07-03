@@ -14,13 +14,14 @@ npm run planner:start
 浏览器打开 `http://127.0.0.1:4310`，输入视频链接或上传 MP4/MOV/WEBM 文件即可调用现有
 `video-to-design` 流程，生成结果会保存到 `docs/design/` 并显示在网页中。
 Agent 运行器支持 Codex、Claude Code、OpenCode、OpenClaw。OpenCode / OpenClaw 可进一步选择
-DeepSeek、智谱 GLM 或自定义 `provider/model`；模型留空时使用网页中的推荐默认值。
+DeepSeek、智谱 GLM、MiniMax 或自定义 `provider/model`；模型留空时使用网页中的推荐默认值。
 
 API Key 只在运行服务的电脑上配置，不会发送到网页：
 
 ```powershell
 $env:DEEPSEEK_API_KEY="..."
-$env:ZHIPUAI_API_KEY="..."  # 也兼容 ZAI_API_KEY
+$env:ZHIPUAI_API_KEY="..."   # 也兼容 ZAI_API_KEY
+$env:MINIMAX_API_KEY="..."   # 海外账号另设 MINIMAX_BASE_URL=https://api.minimax.io/v1
 npm run planner:start
 ```
 

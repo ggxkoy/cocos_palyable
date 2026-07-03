@@ -46,6 +46,8 @@ export class CrewGame extends Component {
     }
 
     protected onEnable(): void {
+        this.view.enableGroundInput((webX, webY) => this.model.commandMove(webX, webY));
+
         this.padHandlers.length = 0;
         for (const pad of this.view.pads) {
             const handler = (): void => this.handlePadTap(pad.purchaseId);
@@ -72,6 +74,8 @@ export class CrewGame extends Component {
     }
 
     protected onDisable(): void {
+        this.view.disableGroundInput();
+
         for (const entry of this.padHandlers) {
             entry.node.off(Node.EventType.TOUCH_END, entry.handler, this);
         }

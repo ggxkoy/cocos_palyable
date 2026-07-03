@@ -24,6 +24,14 @@ export function toH(webH: number): number {
     return webH * SCALE_Y;
 }
 
+export function fromX(designX: number): number {
+    return (designX + DESIGN_WIDTH * 0.5) / SCALE_X;
+}
+
+export function fromY(designY: number): number {
+    return (DESIGN_HEIGHT * 0.5 - designY) / SCALE_Y;
+}
+
 export function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(max, value));
 }

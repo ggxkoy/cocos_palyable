@@ -1,6 +1,6 @@
-import { Color, Label, Node, Sprite, SpriteFrame, UITransform } from 'cc';
+import { Color, EventTouch, Label, Node, Sprite, SpriteFrame, UITransform, v3 } from 'cc';
 import { buildEndCard, EndCardHandles } from '../common/EndCard';
-import { DESIGN_HEIGHT, DESIGN_WIDTH, toH, toW, toX, toY } from '../common/Layout';
+import { DESIGN_HEIGHT, DESIGN_WIDTH, fromX, fromY, toH, toW, toX, toY } from '../common/Layout';
 import { createBox, createHandHint, createLabel, createNode } from '../common/PlaceholderFactory';
 import { SparkSystem } from '../common/SparkSystem';
 import { CREW_CONFIG } from './CrewConfig';
@@ -32,6 +32,9 @@ const DEPOT = new Color(94, 70, 128, 255);
 const DEPOT_STACK = new Color(255, 216, 95, 255);
 const WORKER_BODY = new Color(224, 140, 60, 255);
 const WORKER_HEAD = new Color(240, 205, 165, 255);
+const CHIEF_BODY = new Color(61, 109, 176, 255);
+const CHIEF_HEAD = new Color(240, 205, 165, 255);
+const MOVE_MARKER = new Color(255, 245, 196, 150);
 const GOLD = new Color(255, 216, 95, 255);
 const PAD = new Color(233, 185, 63, 255);
 const PAD_DISABLED = new Color(105, 96, 74, 255);
@@ -78,6 +81,13 @@ export class CrewView {
     private readonly veinNodes = new Map<number, Node>();
     private readonly workerViews = new Map<number, WorkerView>();
     private workerLayer: Node | null = null;
+    private rootTransform: UITransform | null = null;
+    private chiefNode: Node | null = null;
+    private chiefBars: Node[] = [];
+    private moveMarker: Node | null = null;
+    private inputLayer: Node | null = null;
+    private groundCallback: ((webX: number, webY: number) => void) | null = null;
+    private readonly onGroundTap = (event: EventTouch): void => this.handleGroundTap(event);
     private vaultBody: Sprite | null = null;
     private vaultLock: Node | null = null;
     private sparks: SparkSystem | null = null;
@@ -95,6 +105,7 @@ export class CrewView {
 
     public build(root: Node, frames: CrewFrames): void {
         this.frames = frames;
+        this.rootTransform = root.getComponent(UITransform);
 
         createBox('Background', root, 0, 0, DESIGN_WIDTH, DESIGN_HEIGHT, GROUND, frames.background);
         if (!frames.background) {
@@ -131,7 +142,33 @@ export class CrewView {
         createBox('DepotStack', depotNode, 0, toW(10), toW(110), toW(36), DEPOT_STACK);
 
         this.workerLayer = createNode('Workers', root, 0, 0);
+
+        // 主角（玩家驱动）：蓝衣、比雇员高一头，配移动目的地标记。
+        const spawn = CONFIG.stations.workerSpawn;
+        const chief = createNode('Chief', root, toX(spawn.x), toY(spawn.y));
+        createBox('Body', chief, 0, 0, toW(30), toW(42), CHIEF_BODY, frames.worker);
+        if (!frames.worker) {
+            createBox('Head', chief, 0, toW(29), toW(22), toW(22), CHIEF_HEAD);
+        }
+        this.chiefBars = [];
+        for (let i = 0; i < CONFIG.workerCapacity; i += 1) {
+            const bar = createBox(`Bar${i}`, chief, 0, toW(45 + i * 9), toW(22), toW(7), GOLD);
+            bar.active = false;
+            this.chiefBars.push(bar);
+        }
+        this.chiefNode = chief;
+
+        const marker = createBox('MoveMarker', root, 0, 0, toW(20), toW(20), MOVE_MARKER);
+        marker.angle = 45;
+        marker.active = false;
+        this.moveMarker = marker;
+
         this.sparks = new SparkSystem(createNode('Fx', root, 0, 0));
+
+        // 地面点击层：在目标牌之下，牌子优先响应，其余点击都是主角移动指令。
+        const input = createNode('GroundInput', root, 0, 0);
+        input.addComponent(UITransform).setContentSize(DESIGN_WIDTH, DESIGN_HEIGHT);
+        this.inputLayer = input;
 
         this.buildPads(root, frames);
         this.buildHud(root);
@@ -145,7 +182,18 @@ export class CrewView {
         });
     }
 
+    public enableGroundInput(onTap: (webX: number, webY: number) => void): void {
+        this.groundCallback = onTap;
+        this.inputLayer?.on(Node.EventType.TOUCH_END, this.onGroundTap, this);
+    }
+
+    public disableGroundInput(): void {
+        this.groundCallback = null;
+        this.inputLayer?.off(Node.EventType.TOUCH_END, this.onGroundTap, this);
+    }
+
     public tick(deltaTime: number, time: number, model: CrewModel): void {
+        this.syncChief(model);
         this.syncWorkers(model);
         this.refreshZones(model);
         this.refreshVeins(model);
@@ -205,6 +253,34 @@ export class CrewView {
         this.goldLabel = gold;
 
         this.messageLabel = createLabel('MessageLabel', hud, toX(195), toY(116), MESSAGES[CrewPhase.Guide], 40, TEXT_WHITE);
+    }
+
+    private handleGroundTap(event: EventTouch): void {
+        if (!this.groundCallback) {
+            return;
+        }
+        const ui = event.getUILocation();
+        const local = this.rootTransform
+            ? this.rootTransform.convertToNodeSpaceAR(v3(ui.x, ui.y, 0))
+            : { x: ui.x - DESIGN_WIDTH * 0.5, y: ui.y - DESIGN_HEIGHT * 0.5 };
+        this.groundCallback(fromX(local.x), fromY(local.y));
+    }
+
+    private syncChief(model: CrewModel): void {
+        const chief = model.chief;
+        if (this.chiefNode) {
+            this.chiefNode.setPosition(toX(chief.x), toY(chief.y), 0);
+        }
+        this.chiefBars.forEach((bar, index) => {
+            bar.active = chief.carrying > index;
+        });
+        if (this.moveMarker) {
+            const hasTarget = chief.moveTargetX !== null && chief.moveTargetY !== null;
+            this.moveMarker.active = hasTarget;
+            if (hasTarget) {
+                this.moveMarker.setPosition(toX(chief.moveTargetX!), toY(chief.moveTargetY!), 0);
+            }
+        }
     }
 
     private syncWorkers(model: CrewModel): void {
@@ -314,21 +390,52 @@ export class CrewView {
         }
     }
 
+    // 定向引导链：可买目标牌 > 背满去仓库 > 去最近矿脉——始终指向玩家该点的下一处。
     private tickHand(time: number, model: CrewModel): void {
         if (!this.hand) {
             return;
         }
+        if (model.phase === CrewPhase.Boom || model.phase === CrewPhase.End) {
+            this.hand.active = false;
+            return;
+        }
+        const bob = Math.sin(time * 6) * 8;
+
         const next = model.nextPurchase();
-        const pad = next && model.canAfford(next)
-            ? this.pads.find(item => item.purchaseId === next.id && item.node.active)
-            : undefined;
-        if (!pad || model.phase === CrewPhase.Boom || model.phase === CrewPhase.End) {
+        if (next && model.canAfford(next)) {
+            const pad = this.pads.find(item => item.purchaseId === next.id && item.node.active);
+            if (pad) {
+                this.hand.active = true;
+                this.hand.setPosition(toX(pad.webX + 30), toY(pad.webY + 44 + bob), 0);
+                return;
+            }
+        }
+
+        if (model.chief.carrying >= CONFIG.workerCapacity) {
+            const depot = CONFIG.stations.depot;
+            this.hand.active = true;
+            this.hand.setPosition(toX(depot.x + 30), toY(depot.y + 44 + bob), 0);
+            return;
+        }
+
+        let target: { x: number; y: number } | null = null;
+        let best = Infinity;
+        for (const vein of model.veins) {
+            if (vein.stock <= 0 || !model.zones.find(zone => zone.id === vein.zoneId)?.unlocked) {
+                continue;
+            }
+            const distance = Math.hypot(vein.x - model.chief.x, vein.y - model.chief.y);
+            if (distance < best) {
+                best = distance;
+                target = vein;
+            }
+        }
+        if (!target) {
             this.hand.active = false;
             return;
         }
         this.hand.active = true;
-        const bob = Math.sin(time * 6) * 8;
-        this.hand.setPosition(toX(pad.webX + 30), toY(pad.webY + 44 + bob), 0);
+        this.hand.setPosition(toX(target.x + 26), toY(target.y + 40 + bob), 0);
     }
 
     private tickHud(model: CrewModel): void {

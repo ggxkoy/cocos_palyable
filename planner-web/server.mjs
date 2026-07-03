@@ -20,12 +20,15 @@ const MAX_LOG_CHARS = 48_000;
 const MAX_JOBS = 20;
 const VIDEO_EXTENSIONS = new Set(['.mp4', '.mov', '.webm']);
 const AGENT_IDS = ['codex', 'claude', 'opencode', 'openclaw'];
-const PROVIDER_IDS = ['default', 'deepseek', 'glm', 'custom'];
+const PROVIDER_IDS = ['default', 'deepseek', 'glm', 'minimax', 'custom'];
 // 必须是各提供方真实存在的模型 ID，凭空的名字会让整次生成 404。
 const DEFAULT_MODELS = {
     deepseek: 'deepseek-chat',
     glm: 'glm-4.6',
+    minimax: 'MiniMax-M2',
 };
+// MiniMax 开放平台默认国内域名，海外部署用 MINIMAX_BASE_URL 覆盖为 https://api.minimax.io/v1。
+const MINIMAX_BASE_URL = process.env.MINIMAX_BASE_URL || 'https://api.minimaxi.com/v1';
 
 function readFlag(name, fallback) {
     const index = process.argv.indexOf(name);
@@ -376,6 +379,7 @@ function runtimeModel(agent, provider, model) {
     if (!model || provider === 'default' || provider === 'custom') return model;
     if (provider === 'deepseek') return model.includes('/') ? model : `deepseek/${model}`;
     if (provider === 'glm') return model.includes('/') ? model : `${agent === 'openclaw' ? 'zai' : 'zhipu'}/${model}`;
+    if (provider === 'minimax') return model.includes('/') ? model : `minimax/${model}`;
     return model;
 }
 
@@ -397,6 +401,20 @@ function opencodeEnvironment(provider, model) {
                     apiKey: '{env:PLANNER_GLM_API_KEY}',
                 },
                 models: { [model || DEFAULT_MODELS.glm]: { name: model || DEFAULT_MODELS.glm } },
+            },
+        };
+    }
+    if (provider === 'minimax') {
+        env.PLANNER_MINIMAX_API_KEY = process.env.MINIMAX_API_KEY || '';
+        config.provider = {
+            minimax: {
+                npm: '@ai-sdk/openai-compatible',
+                name: 'MiniMax',
+                options: {
+                    baseURL: MINIMAX_BASE_URL,
+                    apiKey: '{env:PLANNER_MINIMAX_API_KEY}',
+                },
+                models: { [model || DEFAULT_MODELS.minimax]: { name: model || DEFAULT_MODELS.minimax } },
             },
         };
     }
@@ -647,6 +665,7 @@ const server = createServer(async (request, response) => {
                 { id: 'default', label: '运行器默认模型', configured: true },
                 { id: 'deepseek', label: 'DeepSeek', configured: Boolean(process.env.DEEPSEEK_API_KEY) },
                 { id: 'glm', label: '智谱 GLM', configured: Boolean(process.env.ZHIPUAI_API_KEY || process.env.ZAI_API_KEY) },
+                { id: 'minimax', label: 'MiniMax', configured: Boolean(process.env.MINIMAX_API_KEY) },
                 { id: 'custom', label: '自定义 provider/model', configured: true },
             ],
             dryRun: DRY_RUN,

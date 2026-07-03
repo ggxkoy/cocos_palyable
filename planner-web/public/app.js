@@ -54,7 +54,7 @@ function analysisOptions() {
 
 function analysisLabel(job) {
     const agents = { codex: 'Codex', claude: 'Claude Code', opencode: 'OpenCode', openclaw: 'OpenClaw' };
-    const providers = { default: '默认模型', deepseek: 'DeepSeek', glm: '智谱 GLM', custom: '自定义模型' };
+    const providers = { default: '默认模型', deepseek: 'DeepSeek', glm: '智谱 GLM', minimax: 'MiniMax', custom: '自定义模型' };
     const name = agents[job.agent] || job.agent;
     return job.model ? `${name} · ${providers[job.provider] || job.provider} / ${job.model}` : `${name} · 默认模型`;
 }
@@ -71,6 +71,7 @@ function updateModelControls() {
         default: '留空使用运行器默认模型',
         deepseek: '默认 deepseek-chat，也可填写其它 DeepSeek 模型',
         glm: '默认 glm-4.6，也可填写其它 GLM 模型',
+        minimax: '默认 MiniMax-M2，也可填写其它 MiniMax 模型',
         custom: '必填，例如 openrouter/deepseek/deepseek-chat',
     };
     modelName.placeholder = defaults[modelProvider.value];
