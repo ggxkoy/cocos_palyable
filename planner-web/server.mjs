@@ -21,9 +21,10 @@ const MAX_JOBS = 20;
 const VIDEO_EXTENSIONS = new Set(['.mp4', '.mov', '.webm']);
 const AGENT_IDS = ['codex', 'claude', 'opencode', 'openclaw'];
 const PROVIDER_IDS = ['default', 'deepseek', 'glm', 'custom'];
+// 必须是各提供方真实存在的模型 ID，凭空的名字会让整次生成 404。
 const DEFAULT_MODELS = {
-    deepseek: 'deepseek-v4-pro',
-    glm: 'glm-5.1',
+    deepseek: 'deepseek-chat',
+    glm: 'glm-4.6',
 };
 
 function readFlag(name, fallback) {
@@ -252,7 +253,7 @@ function agentFailureMessage(job, exitCode) {
     const log = job.log.toLowerCase();
     const labels = { codex: 'Codex', claude: 'Claude Code', opencode: 'OpenCode', openclaw: 'OpenClaw' };
     if (log.includes('usage limit') || log.includes('purchase more credits')) {
-        return 'Codex 当前额度已用完；如 Claude Code 已正常登录可切换使用，否则请等待额度恢复后重试。';
+        return `${labels[job.agent] || job.agent} 当前额度已用完；可切换其他运行器，或等待额度恢复后重试。`;
     }
     if (log.includes('requires a newer version of codex')) {
         return 'Codex CLI 版本过旧，无法使用当前模型。请重新运行 npm install 后重试。';
@@ -286,8 +287,8 @@ function buildPrompt(source) {
         ? `Input URL: ${source.input}`
         : `Input local file: ${source.input}`;
     return [
-        'PRIMARY OBJECTIVE: produce the playable design document first. The docs/design/<name>.md file is more important than exhaustive media processing or any secondary artifact.',
-        'Create the markdown deliverable early, then refine it with the strongest observable evidence available.',
+        'PRIMARY OBJECTIVE: produce the playable design document. The docs/design/<name>.md file is the only deliverable that matters.',
+        'Do the analysis first, then write the COMPLETE design document in a single write at the end. Never create an empty or placeholder markdown file, and never leave a partially written document behind.',
         'Time-box downloading, frame extraction, and investigation. If some evidence cannot be obtained, state the uncertainty in the design document and still complete a useful plan instead of failing the whole task.',
         'Read .claude/commands/video-to-design.md completely as a procedural reference.',
         'Perform the video and gameplay analysis independently. Borrow the useful workflow steps, but do not imitate Claude reasoning or reuse prior conclusions.',
@@ -381,22 +382,25 @@ function runtimeModel(agent, provider, model) {
 function opencodeEnvironment(provider, model) {
     const env = { ...process.env };
     if (process.env.DEEPSEEK_API_KEY) env.DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+    // 无人值守运行：放行编辑/命令/抓取权限，否则 run 模式会卡在待确认状态。
+    const config = {
+        permission: { edit: 'allow', bash: 'allow', webfetch: 'allow' },
+    };
     if (provider === 'glm') {
         env.PLANNER_GLM_API_KEY = process.env.ZHIPUAI_API_KEY || process.env.ZAI_API_KEY || '';
-        env.OPENCODE_CONFIG_CONTENT = JSON.stringify({
-            provider: {
-                zhipu: {
-                    npm: '@ai-sdk/openai-compatible',
-                    name: '智谱 GLM',
-                    options: {
-                        baseURL: 'https://open.bigmodel.cn/api/paas/v4',
-                        apiKey: '{env:PLANNER_GLM_API_KEY}',
-                    },
-                    models: { [model || DEFAULT_MODELS.glm]: { name: model || DEFAULT_MODELS.glm } },
+        config.provider = {
+            zhipu: {
+                npm: '@ai-sdk/openai-compatible',
+                name: '智谱 GLM',
+                options: {
+                    baseURL: 'https://open.bigmodel.cn/api/paas/v4',
+                    apiKey: '{env:PLANNER_GLM_API_KEY}',
                 },
+                models: { [model || DEFAULT_MODELS.glm]: { name: model || DEFAULT_MODELS.glm } },
             },
-        });
+        };
     }
+    env.OPENCODE_CONFIG_CONTENT = JSON.stringify(config);
     return env;
 }
 
@@ -404,7 +408,14 @@ function agentCommand(prompt, agent, provider, model, jobId) {
     const selectedModel = runtimeModel(agent, provider, model);
     if (agent === 'codex') {
         const launch = codexLaunch();
-        const args = ['exec', '--full-auto', '--ephemeral', '-C', REPO_ROOT];
+        // codex 0.142.x 的 exec 没有 --full-auto；默认沙箱是只读的，必须显式
+        // 开 workspace-write（写 docs/design）和网络（下载链接视频/抽帧依赖）。
+        const args = [
+            'exec', '--ephemeral',
+            '-s', 'workspace-write',
+            '-c', 'sandbox_workspace_write.network_access=true',
+            '-C', REPO_ROOT,
+        ];
         if (selectedModel) {
             args.push('-m', selectedModel);
         }
@@ -417,7 +428,9 @@ function agentCommand(prompt, agent, provider, model, jobId) {
     }
     if (agent === 'opencode') {
         const launch = windowsNpmLaunch('opencode', join('opencode-ai', 'bin', 'opencode.exe'));
-        const args = ['run', '--format', 'default', '--dir', REPO_ROOT, '--auto'];
+        // opencode run 没有 --auto 参数（会被静默忽略）；无人值守的工具权限
+        // 通过 OPENCODE_CONFIG_CONTENT 的 permission 配置放行。
+        const args = ['run', '--format', 'default', '--dir', REPO_ROOT];
         if (selectedModel) args.push('--model', selectedModel);
         args.push(prompt);
         return { command: launch.command, args: [...launch.prefixArgs, ...args], env: opencodeEnvironment(provider, model) };
@@ -443,7 +456,7 @@ function agentCommand(prompt, agent, provider, model, jobId) {
     }
     args.push(
         '--allowedTools',
-        'Read,Write,Edit,Glob,Grep,Bash(curl *),Bash(yt-dlp *),Bash(ffmpeg *),Bash(python *),Bash(python3 *),Bash(mkdir *),Bash(cp *)',
+        'Read,Write,Edit,Glob,Grep,Bash(curl *),Bash(yt-dlp *),Bash(ffmpeg *),Bash(python *),Bash(python3 *),Bash(pip *),Bash(pip3 *),Bash(node *),Bash(ls *),Bash(mkdir *),Bash(cp *),Bash(mv *)',
     );
     return {
         command: launch.command,
@@ -452,18 +465,24 @@ function agentCommand(prompt, agent, provider, model, jobId) {
     };
 }
 
+// 空文件或占位残骸不算策划案：至少要有标题和一定篇幅才认定生成成功。
+async function isUsableDesignDoc(filePath) {
+    try {
+        const content = await readFile(filePath, 'utf8');
+        return content.trim().length >= 300 && /^#\s+\S/m.test(content);
+    } catch {
+        return false;
+    }
+}
+
 async function detectOutput(job, beforeDocuments) {
     const marker = job.log.match(/PLANNER_OUTPUT=([^\r\n]+)/g)?.at(-1)?.replace('PLANNER_OUTPUT=', '').trim();
     if (marker) {
         const candidate = resolve(REPO_ROOT, marker);
         const withinDesignDir = relative(DESIGN_DIR, candidate);
-        if (!withinDesignDir.startsWith('..') && !withinDesignDir.includes(':') && extname(candidate).toLowerCase() === '.md') {
-            try {
-                await stat(candidate);
-                return candidate;
-            } catch {
-                // Fall through to modified-file detection.
-            }
+        if (!withinDesignDir.startsWith('..') && !withinDesignDir.includes(':') && extname(candidate).toLowerCase() === '.md'
+            && await isUsableDesignDoc(candidate)) {
+            return candidate;
         }
     }
 
@@ -471,7 +490,12 @@ async function detectOutput(job, beforeDocuments) {
     const changed = (await listDesignDocuments())
         .filter(document => !previous.has(document.filePath) || document.mtimeMs > previous.get(document.filePath))
         .sort((a, b) => b.mtimeMs - a.mtimeMs);
-    return changed[0]?.filePath || null;
+    for (const document of changed) {
+        if (await isUsableDesignDoc(document.filePath)) {
+            return document.filePath;
+        }
+    }
+    return null;
 }
 
 async function runDryJob(job) {
@@ -525,9 +549,14 @@ async function runJob(job) {
     if (outputPath) {
         job.outputPath = outputPath;
         job.outputName = outputPath.split(/[\\/]/).at(-1);
-    }
-    if (!job.error && !job.outputPath) {
-        job.error = 'Agent 已结束，但没有检测到新生成的 docs/design/*.md。';
+        // 有效策划案已经落盘时，退出码异常只作为警告记录（部分 CLI 出错也返回 0，
+        // 部分 CLI 收尾阶段非 0 但产物完好），以产物为准。
+        if (job.error) {
+            appendLog(job, `\n[planner] Agent 退出异常（${job.error}），但已生成有效策划案，按成功处理。\n`);
+            job.error = null;
+        }
+    } else if (!job.error) {
+        job.error = 'Agent 已结束，但没有生成有效的策划案（docs/design/*.md 缺失、为空或没有标题）。请展开处理日志查看中断原因。';
     }
 
     job.completedAt = new Date().toISOString();

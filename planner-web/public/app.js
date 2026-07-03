@@ -69,9 +69,9 @@ function updateModelControls() {
     }
     const defaults = {
         default: '留空使用运行器默认模型',
-        deepseek: '默认 deepseek-v4-pro，也可填写其它 DeepSeek 模型',
-        glm: '默认 glm-5.1，也可填写其它 GLM 模型',
-        custom: '必填，例如 openrouter/z-ai/glm-5.1',
+        deepseek: '默认 deepseek-chat，也可填写其它 DeepSeek 模型',
+        glm: '默认 glm-4.6，也可填写其它 GLM 模型',
+        custom: '必填，例如 openrouter/deepseek/deepseek-chat',
     };
     modelName.placeholder = defaults[modelProvider.value];
     modelName.required = modelProvider.value === 'custom';
