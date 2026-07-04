@@ -1,6 +1,6 @@
 import { Action, BtNode, BtStatus, Condition, Repeat, Selector, Sequence } from '../common/BehaviorTree';
 import { CREW_CONFIG } from './CrewConfig';
-import { Chief, CrewPhase, Purchase, Vein, Worker, Zone } from './CrewTypes';
+import { Chief, CrewPhase, HordeEnemy, Purchase, Vein, Worker, Zone } from './CrewTypes';
 
 const CONFIG = CREW_CONFIG;
 
@@ -8,6 +8,13 @@ export interface FxEvent {
     readonly x: number;
     readonly y: number;
     readonly amount: number;
+}
+
+export interface FireEvent {
+    readonly fromX: number;
+    readonly fromY: number;
+    readonly toX: number;
+    readonly toY: number;
 }
 
 interface WorkerContext {
@@ -34,6 +41,9 @@ export class CrewModel {
     }));
 
     public vaultOpened = false;
+    // 弹药随入库上涨、随炮塔射击消耗（策划案差异点 #2，视觉经济）。
+    public ammo = 0;
+    public readonly horde: HordeEnemy[] = [];
 
     // 主角：移动只响应玩家指令，没有指令就停在原地。
     public readonly chief: Chief = {
@@ -49,7 +59,11 @@ export class CrewModel {
     private readonly trees = new Map<number, { tree: BtNode<WorkerContext>; context: WorkerContext }>();
     private readonly depositEvents: FxEvent[] = [];
     private readonly strikeEvents: FxEvent[] = [];
+    private readonly fireEvents: FireEvent[] = [];
     private nextWorkerId = 1;
+    private nextEnemyId = 1;
+    private turretIndex = 0;
+    private fireTimer = 0;
     private boomTimer = 0;
 
     constructor() {
@@ -131,12 +145,13 @@ export class CrewModel {
         this.tickWorkers(deltaTime);
 
         if (this.phase === CrewPhase.Boom) {
+            this.tickDefense(deltaTime);
             this.boomTimer -= deltaTime;
             if (this.boomTimer <= 0) {
                 this.phase = CrewPhase.End;
             }
         }
-        // 没有任何自动推进：结算只能由玩家点开金库触发。
+        // 没有任何自动推进：结算只能由玩家亲手打捞大飞机（vault）触发。
     }
 
     public drainDepositEvents(): FxEvent[] {
@@ -147,10 +162,62 @@ export class CrewModel {
         return this.strikeEvents.splice(0, this.strikeEvents.length);
     }
 
+    public drainFireEvents(): FireEvent[] {
+        return this.fireEvents.splice(0, this.fireEvents.length);
+    }
+
     private openVault(): void {
         this.vaultOpened = true;
         this.phase = CrewPhase.Boom;
         this.boomTimer = CONFIG.boomDuration;
+        this.spawnHorde();
+    }
+
+    // 敌潮防御演出：打捞完成的瞬间敌潮涌来，防线火力兑现。
+    private spawnHorde(): void {
+        for (let i = 0; i < CONFIG.defense.enemyCount; i += 1) {
+            this.horde.push({
+                id: this.nextEnemyId,
+                x: 55 + ((i * 53) % 281),
+                y: CONFIG.defense.spawnY + (i % 4) * 28,
+                alive: true,
+            });
+            this.nextEnemyId += 1;
+        }
+    }
+
+    private tickDefense(deltaTime: number): void {
+        for (const enemy of this.horde) {
+            if (!enemy.alive) {
+                continue;
+            }
+            enemy.y = Math.max(CONFIG.defense.lineY, enemy.y - CONFIG.defense.enemySpeed * deltaTime);
+        }
+
+        this.fireTimer -= deltaTime;
+        while (this.fireTimer <= 0) {
+            // 威胁优先：离防线最近（y 最小）的活敌先被点名。
+            let target: HordeEnemy | null = null;
+            for (const enemy of this.horde) {
+                if (enemy.alive && (!target || enemy.y < target.y)) {
+                    target = enemy;
+                }
+            }
+            if (!target) {
+                this.fireTimer = 0;
+                break;
+            }
+            const turret = CONFIG.defense.turrets[this.turretIndex % CONFIG.defense.turrets.length];
+            this.turretIndex += 1;
+            target.alive = false;
+            this.ammo = Math.max(0, this.ammo - 1);
+            this.fireEvents.push({ fromX: turret.x, fromY: turret.y, toX: target.x, toY: target.y });
+            this.fireTimer += CONFIG.defense.fireInterval;
+        }
+    }
+
+    private gainAmmo(bars: number): void {
+        this.ammo = Math.min(CONFIG.defense.ammoCap, this.ammo + bars * CONFIG.defense.ammoPerBar);
     }
 
     // 主角：先消费玩家的移动指令，再做「范围内自动交互」——
@@ -192,6 +259,7 @@ export class CrewModel {
                 if (chief.actionTimer >= CONFIG.depositTime) {
                     chief.actionTimer = 0;
                     const amount = chief.carrying * CONFIG.goldPerBar;
+                    this.gainAmmo(chief.carrying);
                     chief.carrying = 0;
                     this.gold += amount;
                     this.depositEvents.push({ x: chief.x, y: chief.y, amount });
@@ -347,6 +415,7 @@ export class CrewModel {
         worker.actionTimer = 0;
 
         const amount = worker.carrying * CONFIG.goldPerBar;
+        this.gainAmmo(worker.carrying);
         worker.carrying = 0;
         this.gold += amount;
         this.depositEvents.push({ x: worker.x, y: worker.y, amount });

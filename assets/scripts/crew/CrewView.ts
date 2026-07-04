@@ -35,6 +35,10 @@ const WORKER_HEAD = new Color(240, 205, 165, 255);
 const CHIEF_BODY = new Color(61, 109, 176, 255);
 const CHIEF_HEAD = new Color(240, 205, 165, 255);
 const MOVE_MARKER = new Color(255, 245, 196, 150);
+const TURRET_BASE = new Color(70, 110, 170, 255);
+const TURRET_BARREL = new Color(36, 48, 66, 255);
+const ENEMY_RED = new Color(200, 70, 60, 255);
+const LASER = new Color(120, 220, 255, 230);
 const GOLD = new Color(255, 216, 95, 255);
 const PAD = new Color(233, 185, 63, 255);
 const PAD_DISABLED = new Color(105, 96, 74, 255);
@@ -90,6 +94,11 @@ export class CrewView {
     private readonly onGroundTap = (event: EventTouch): void => this.handleGroundTap(event);
     private vaultBody: Sprite | null = null;
     private vaultLock: Node | null = null;
+    private hordeLayer: Node | null = null;
+    private readonly hordeNodes = new Map<number, Node>();
+    private readonly lasers: Array<{ node: Node; life: number }> = [];
+    private ammoLabel: Label | null = null;
+    private lastAmmoText = '';
     private sparks: SparkSystem | null = null;
     private hand: Node | null = null;
     private endCard: EndCardHandles | null = null;
@@ -140,6 +149,14 @@ export class CrewView {
         const depotNode = createNode('Depot', root, toX(depot.x), toY(depot.y));
         createBox('DepotBase', depotNode, 0, 0, toW(150), toW(90), DEPOT, frames.depot);
         createBox('DepotStack', depotNode, 0, toW(10), toW(110), toW(36), DEPOT_STACK);
+
+        // 防线炮塔：开局即可见（压力侧的长期锚点），敌潮演出时开火。
+        for (const [index, turret] of CONFIG.defense.turrets.entries()) {
+            const node = createNode(`Turret${index + 1}`, root, toX(turret.x), toY(turret.y));
+            createBox('Base', node, 0, 0, toW(46), toW(40), TURRET_BASE);
+            createBox('Barrel', node, 0, -toW(26), toW(12), toW(26), TURRET_BARREL);
+        }
+        this.hordeLayer = createNode('Horde', root, 0, 0);
 
         this.workerLayer = createNode('Workers', root, 0, 0);
 
@@ -210,7 +227,45 @@ export class CrewView {
         for (const deposit of model.drainDepositEvents()) {
             this.sparks?.burst(deposit.x, deposit.y - 10, 8);
         }
+        this.tickDefenseFx(deltaTime, model);
         this.sparks?.tick(deltaTime);
+    }
+
+    // 敌潮与炮塔火力：敌人节点随模型同步，激光短暂驻留后消散，击倒处迸火花。
+    private tickDefenseFx(deltaTime: number, model: CrewModel): void {
+        for (const enemy of model.horde) {
+            let node = this.hordeNodes.get(enemy.id);
+            if (!node) {
+                node = createBox(`Enemy${enemy.id}`, this.hordeLayer!, 0, 0, toW(24), toW(24), ENEMY_RED);
+                createBox('Cap', node, 0, toW(9), toW(16), toW(10), new Color(150, 40, 34, 255));
+                this.hordeNodes.set(enemy.id, node);
+            }
+            node.active = enemy.alive;
+            if (enemy.alive) {
+                node.setPosition(toX(enemy.x), toY(enemy.y), 0);
+            }
+        }
+
+        for (const fire of model.drainFireEvents()) {
+            const ax = toX(fire.fromX);
+            const ay = toY(fire.fromY - 14);
+            const bx = toX(fire.toX);
+            const by = toY(fire.toY);
+            const length = Math.hypot(bx - ax, by - ay);
+            const laser = createBox('Laser', this.hordeLayer!, (ax + bx) * 0.5, (ay + by) * 0.5, length, toW(5), LASER);
+            laser.angle = Math.atan2(by - ay, bx - ax) * 180 / Math.PI;
+            this.lasers.push({ node: laser, life: 0.1 });
+            this.sparks?.burst(fire.toX, fire.toY, 5);
+        }
+
+        for (let i = this.lasers.length - 1; i >= 0; i -= 1) {
+            const laser = this.lasers[i];
+            laser.life -= deltaTime;
+            if (laser.life <= 0) {
+                laser.node.destroy();
+                this.lasers.splice(i, 1);
+            }
+        }
     }
 
     public celebratePurchase(purchaseId: string): void {
@@ -251,6 +306,9 @@ export class CrewView {
         gold.node.getComponent(UITransform)?.setAnchorPoint(0, 0.5);
         gold.horizontalAlign = Label.HorizontalAlign.LEFT;
         this.goldLabel = gold;
+
+        createBox('AmmoPanel', hud, toX(293), toY(47), toW(150), toH(46), PANEL);
+        this.ammoLabel = createLabel('AmmoLabel', hud, toX(293), toY(48), `${CONFIG.texts.ammoPrefix}0/${CONFIG.defense.ammoCap}`, 28, TEXT_WHITE);
 
         this.messageLabel = createLabel('MessageLabel', hud, toX(195), toY(116), MESSAGES[CrewPhase.Guide], 40, TEXT_WHITE);
     }
@@ -443,6 +501,12 @@ export class CrewView {
         if (this.goldLabel && goldText !== this.lastGoldText) {
             this.goldLabel.string = goldText;
             this.lastGoldText = goldText;
+        }
+
+        const ammoText = `${CONFIG.texts.ammoPrefix}${model.ammo}/${CONFIG.defense.ammoCap}`;
+        if (this.ammoLabel && ammoText !== this.lastAmmoText) {
+            this.ammoLabel.string = ammoText;
+            this.lastAmmoText = ammoText;
         }
     }
 

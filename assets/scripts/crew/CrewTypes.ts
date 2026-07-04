@@ -34,6 +34,14 @@ export interface Vein {
 
 export type WorkerTask = 'rally' | 'approach' | 'strike' | 'toDepot' | 'deposit';
 
+// 敌潮单位：防御演出中从画面下方向防线推进，被炮塔逐个击倒。
+export interface HordeEnemy {
+    readonly id: number;
+    x: number;
+    y: number;
+    alive: boolean;
+}
+
 export type ChiefMode = 'idle' | 'strike' | 'deposit';
 
 // 主角：移动完全由玩家驱动（点击目的地），停手即停在原地；
