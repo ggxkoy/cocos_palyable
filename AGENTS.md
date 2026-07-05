@@ -30,4 +30,9 @@
 - `types/cc.d.ts` 是手写 stub，只覆盖用到的引擎 API；新代码用了新 API 就同步扩充 stub，
   保持与真实 cc 签名兼容；不要引入真实 cc npm 包。
 - CTA 与广告生命周期统一走 `common/PlayableSdk.ts`，每个模板的 CTA URL 在自己的 Config 里。
+- **3D 模块层**（新 playable 优先）：功能模块在 `assets/scripts/modules/<名>/`，
+  一律 Sim（纯逻辑，禁止 import 'cc'）+ Module（视觉）两文件；模块间只通过
+  framework/EventBus 和构造注入通信。拼新 playable = `playables/<名>/` 下
+  Config + createSim 接线 + Game 模块清单，场景复制骨架后在 TemplateBootstrap 注册。
+  3D 占位用 `common3d/Placeholder3D.ts`，相机/灯光由 CameraRigModule 运行时创建。
 - 不要手写 .meta、不要提交 library/ temp/ build/ 等编辑器生成目录。

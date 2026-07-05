@@ -30,6 +30,14 @@ declare module 'cc' {
 
   export class EventTouch {
     public getUILocation(out?: Vec2): Vec2;
+    public getLocation(out?: Vec2): Vec2;
+  }
+
+  export namespace geometry {
+    export class Ray {
+      public o: Vec3;
+      public d: Vec3;
+    }
   }
 
   export class Size {
@@ -70,6 +78,8 @@ declare module 'cc' {
     public setPosition(x: number, y: number, z?: number): void;
     public getPosition(out?: Vec3): Vec3;
     public setScale(x: number, y: number, z?: number): void;
+    public setRotationFromEuler(x: number, y: number, z: number): void;
+    public lookAt(pos: Vec3, up?: Vec3): void;
     public setSiblingIndex(index: number): void;
     public getChildByName(name: string): Node | null;
     public getChildByPath(path: string): Node | null;
@@ -134,6 +144,51 @@ declare module 'cc' {
 
   export class SpriteFrame {
     public texture: Texture2D;
+  }
+
+  export class Mesh {}
+
+  export namespace primitives {
+    export interface IGeometry {
+      positions: number[];
+    }
+    export function box(options?: { width?: number; height?: number; length?: number }): IGeometry;
+  }
+
+  export namespace utils {
+    export namespace MeshUtils {
+      export function createMesh(geometry: primitives.IGeometry): Mesh;
+    }
+  }
+
+  export class Material {
+    public initialize(info: { effectName: string }): void;
+    public setProperty(name: string, value: unknown): void;
+  }
+
+  export class MeshRenderer extends Component {
+    public mesh: Mesh | null;
+    public material: Material | null;
+  }
+
+  export class DirectionalLight extends Component {}
+
+  export class Camera extends Component {
+    public static readonly ProjectionType: {
+      readonly ORTHO: number;
+      readonly PERSPECTIVE: number;
+    };
+
+    public projection: number;
+    public fov: number;
+    public near: number;
+    public far: number;
+    public orthoHeight: number;
+    public priority: number;
+    public visibility: number;
+    public clearFlags: number;
+    public clearColor: Color;
+    public screenPointToRay(x: number, y: number, out?: geometry.Ray): geometry.Ray;
   }
 
   export class Director {

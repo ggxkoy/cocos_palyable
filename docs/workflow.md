@@ -49,6 +49,28 @@ EndCard（结算卡）、Layout（坐标换算）、TemplateBootstrap（场景�
 BehaviorTree（Sequence/Selector/Condition/Action/Repeat，驱动自主人物：
 经营型工人循环与战斗型士兵行为共用同一套节点，只换树的结构）。
 
+## 3D 模块层（推荐的新 playable 形态）
+
+2D 模板适合快速切片；正式产出走 **3D 模块拼装**（参考视频都是等距 3D）：
+
+- `assets/scripts/framework/` —— 模块契约：`EventBus`（模块间唯一通信通道）、
+  `Module.ts`（ModuleContext：world 3D 根 / ui 2D 根 / bus / camera3d）。
+- `assets/scripts/common3d/Placeholder3D.ts` —— 运行时纯色盒子网格
+  （MeshRenderer + builtin-standard），3D 版占位资产；换美术=换模型 prefab。
+- `assets/scripts/modules/<名>/` —— 每个玩法功能一个模块，**Sim（纯逻辑，
+  node 可冒烟）+ Module（cc 视觉）** 两个文件。现有模块：
+  economy（金币/弹药）、harvest（矿脉/残骸+重生）、avatar（玩家驱动主角，
+  点击移动+范围自动交互）、workers（行为树雇员）、goalchain（目标链+阶段机+大锚点）、
+  defense（敌潮+炮塔）、camera（等距相机+灯光）、stage（场地）、guide（3D 定向引导）、
+  hud（2D 叠加）、endcard（结算+CTA）。
+- **拼一个新 playable** = `assets/scripts/playables/<名>/` 三个文件：
+  Config（纯配置：世界坐标、经济、文案、CTA）、Sim（createXxxSim：挑纯逻辑模块、
+  注入依赖、总线接线）、Game（cc 组件：挑视觉模块清单、逐个 start/tick）
+  ＋ 复制一个场景骨架注册到 TemplateBootstrap。
+- 首个成品：`playables/salvage3d/`（废土打捞防线 3D 版），场景 `salvage3d.scene`。
+- 3D 场景无需手写相机/灯光进 JSON：沿用 2D 场景骨架，相机、平行光、全部 3D
+  节点均由 CameraRigModule / 各模块在运行时创建。
+
 ## 验证手段（无编辑器环境可用）
 
 - `npm run typecheck` —— 全部脚本 strict 检查（types/cc.d.ts stub）

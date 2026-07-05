@@ -3,6 +3,7 @@ import { CrewGame } from '../crew/CrewGame';
 import { GoldRushGame } from '../gold/GoldRushGame';
 import { Match3Game } from '../match3/Match3Game';
 import { MergeGame } from '../merge/MergeGame';
+import { Salvage3DGame } from '../playables/salvage3d/Salvage3DGame';
 import { RunnerGame } from '../runner/RunnerGame';
 import { TowerDefenseGame } from '../towerdefense/TowerDefenseGame';
 import { installAdEventListeners } from './PlayableSdk';
@@ -16,6 +17,7 @@ const TEMPLATES: Record<string, new (...args: never[]) => Component> = {
     match3: Match3Game,
     runner: RunnerGame,
     crew: CrewGame,
+    salvage3d: Salvage3DGame,
 };
 
 // Project scripts run at engine startup, so this module wires the ad SDK and
