@@ -2,8 +2,9 @@ import { EventBus } from '../../framework/EventBus';
 import { EconomySim } from '../economy/EconomySim';
 import { HarvestSim } from '../harvest/HarvestSim';
 
-// 主角模块（纯逻辑）。操作归属：移动只响应玩家 commandMove，
-// 停手即停在原地；仅有「范围内自动交互」（挨着残骸自动拉拽、挨着回收站自动投递）。
+// 主角模块（纯逻辑）。操作归属：移动由虚拟摇杆方向驱动，
+// 松手即停在原地，绝无自动走位；仅有「范围内自动交互」
+// （挨着残骸自动拉拽、挨着回收站自动投递）。
 export interface AvatarConfig {
     readonly spawn: { readonly x: number; readonly z: number };
     readonly depot: { readonly x: number; readonly z: number };
@@ -24,8 +25,8 @@ export class AvatarSim {
     public z: number;
     public carrying = 0;
     public mode: AvatarMode = 'idle';
-    public moveTargetX: number | null = null;
-    public moveTargetZ: number | null = null;
+    public inputX = 0;
+    public inputZ = 0;
 
     private actionTimer = 0;
 
@@ -39,27 +40,27 @@ export class AvatarSim {
         this.z = config.spawn.z;
     }
 
-    public commandMove(x: number, z: number): void {
-        const bounds = this.config.bounds;
-        this.moveTargetX = Math.max(-bounds.halfWidth, Math.min(bounds.halfWidth, x));
-        this.moveTargetZ = Math.max(-bounds.halfLength, Math.min(bounds.halfLength, z));
+    // 摇杆输入：分量为 -1..1 的方向乘力度；(0,0) 即松手。
+    public setMoveInput(inputX: number, inputZ: number): void {
+        const magnitude = Math.hypot(inputX, inputZ);
+        if (magnitude > 1) {
+            this.inputX = inputX / magnitude;
+            this.inputZ = inputZ / magnitude;
+        } else {
+            this.inputX = inputX;
+            this.inputZ = inputZ;
+        }
+    }
+
+    public get moving(): boolean {
+        return this.inputX !== 0 || this.inputZ !== 0;
     }
 
     public tick(deltaTime: number): void {
-        if (this.moveTargetX !== null && this.moveTargetZ !== null) {
-            const dx = this.moveTargetX - this.x;
-            const dz = this.moveTargetZ - this.z;
-            const distance = Math.hypot(dx, dz);
-            const step = this.config.speed * deltaTime;
-            if (distance <= step || distance < 0.02) {
-                this.x = this.moveTargetX;
-                this.z = this.moveTargetZ;
-                this.moveTargetX = null;
-                this.moveTargetZ = null;
-            } else {
-                this.x += (dx / distance) * step;
-                this.z += (dz / distance) * step;
-            }
+        if (this.moving) {
+            const bounds = this.config.bounds;
+            this.x = Math.max(-bounds.halfWidth, Math.min(bounds.halfWidth, this.x + this.inputX * this.config.speed * deltaTime));
+            this.z = Math.max(-bounds.halfLength, Math.min(bounds.halfLength, this.z + this.inputZ * this.config.speed * deltaTime));
         }
 
         if (this.carrying < this.config.capacity) {

@@ -1,4 +1,4 @@
-import { Color, Node } from 'cc';
+import { Color, Node, Prefab, instantiate } from 'cc';
 import { createBox3D, setBoxColor } from '../../common3d/Placeholder3D';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { EconomySim } from '../economy/EconomySim';
@@ -23,18 +23,29 @@ export class GoalChainModule implements PlayableModule {
         private readonly goal: GoalChainSim,
         private readonly economy: EconomySim,
         private readonly vaultPos: { readonly x: number; readonly z: number },
+        private readonly vaultPrefab: Prefab | null = null,
     ) {}
 
     public start(context: ModuleContext): void {
         this.pad = createBox3D('GoalPad', context.world, 0, 0.04, 0, 1.7, 0.1, 1.7, PAD);
         this.pad.active = false;
 
-        // 长期锚点：大飞机残骸从第一帧就横在泥潭里。
-        const vault = createBox3D('PlaneWreck', context.world, this.vaultPos.x, 0.5, this.vaultPos.z, 3.4, 1.0, 1.6, VAULT_LOCKED);
-        createBox3D('Wing', vault, 0, 0.1, 0, 1.1, 0.25, 3.6, VAULT_LOCKED);
-        const lock = createBox3D('WreckLock', vault, 0, 0.9, 0, 0.4, 0.55, 0.4, LOCK);
-        this.vaultBody = vault;
-        this.vaultLock = lock;
+        // 长期锚点：大件残骸从第一帧就横在泥潭里（03_大飞机槽位，空则占位盒子）。
+        if (this.vaultPrefab) {
+            const vault = instantiate(this.vaultPrefab);
+            vault.name = 'PlaneWreck';
+            vault.setPosition(this.vaultPos.x, 0, this.vaultPos.z);
+            context.world.addChild(vault);
+            const lock = createBox3D('WreckLock', vault, 0, 2.0, 0, 0.4, 0.55, 0.4, LOCK);
+            this.vaultBody = vault;
+            this.vaultLock = lock;
+        } else {
+            const vault = createBox3D('PlaneWreck', context.world, this.vaultPos.x, 0.5, this.vaultPos.z, 3.4, 1.0, 1.6, VAULT_LOCKED);
+            createBox3D('Wing', vault, 0, 0.1, 0, 1.1, 0.25, 3.6, VAULT_LOCKED);
+            const lock = createBox3D('WreckLock', vault, 0, 0.9, 0, 0.4, 0.55, 0.4, LOCK);
+            this.vaultBody = vault;
+            this.vaultLock = lock;
+        }
     }
 
     public tick(): void {

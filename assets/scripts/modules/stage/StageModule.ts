@@ -1,4 +1,4 @@
-import { Color, Node } from 'cc';
+import { Color, Material, MeshRenderer, Node, Prefab, instantiate } from 'cc';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { createBox3D, setBoxColor } from '../../common3d/Placeholder3D';
 import { HarvestSim } from '../harvest/HarvestSim';
@@ -32,13 +32,22 @@ export class StageModule implements PlayableModule {
     constructor(
         private readonly config: StageConfig,
         private readonly harvest: HarvestSim,
+        private readonly depotPrefab: Prefab | null = null,
+        private readonly groundMaterial: Material | null = null,
     ) {}
 
     public start(context: ModuleContext): void {
         const world = context.world;
         const ground = this.config.ground;
 
-        createBox3D('Ground', world, 0, -0.12, 0, ground.width, 0.24, ground.length, SAND);
+        const groundNode = createBox3D('Ground', world, 0, -0.12, 0, ground.width, 0.24, ground.length, SAND);
+        // 地面材质槽位（07_沙漠泥潭材质做成 Material 后拖入）。
+        if (this.groundMaterial) {
+            const renderer = groundNode.getComponent(MeshRenderer);
+            if (renderer) {
+                renderer.material = this.groundMaterial;
+            }
+        }
         createBox3D('Swamp', world, 0, -0.02, -7.6, ground.width, 0.08, 5.4, SWAMP);
         createBox3D('DefenseLine', world, 0, 0.01, this.config.hordeLineZ, ground.width, 0.06, 0.5, LINE);
 
@@ -50,8 +59,15 @@ export class StageModule implements PlayableModule {
         }
 
         const depot = this.config.depot;
-        const depotNode = createBox3D('Depot', world, depot.x, 0.45, depot.z, 2.2, 0.9, 1.4, DEPOT);
-        createBox3D('DepotStack', depotNode, 0, 0.62, 0, 1.6, 0.35, 0.9, DEPOT_TOP);
+        if (this.depotPrefab) {
+            const depotNode = instantiate(this.depotPrefab);
+            depotNode.name = 'Depot';
+            depotNode.setPosition(depot.x, 0, depot.z);
+            world.addChild(depotNode);
+        } else {
+            const depotNode = createBox3D('Depot', world, depot.x, 0.45, depot.z, 2.2, 0.9, 1.4, DEPOT);
+            createBox3D('DepotStack', depotNode, 0, 0.62, 0, 1.6, 0.35, 0.9, DEPOT_TOP);
+        }
     }
 
     public tick(): void {

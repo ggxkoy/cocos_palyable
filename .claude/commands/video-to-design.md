@@ -45,7 +45,11 @@ description: 解析参考视频，输出 playable 策划案 markdown（视频 �
    - 都不像就标 `custom`，并在「与模板的差异点」里写清楚需要的新机制。
 
 5. **输出策划案**
-   - 按 `docs/design-doc-template.md` 的结构逐节填写，写入 `docs/design/<视频名称>.md`。
+   - 按 `docs/design-doc-template.md` 的结构逐节填写（该 schema 对标
+     `docs/design/reference/三冰-试玩广告脚本-模拟经营+策略.pdf` 的生产级深度：
+     封面大纲、资源循环、角色&道具动作拆解、地编需求、流程引导表、
+     数值大小关系原则、敌人攻击机制、UI&引导按钮、音效），写入 `docs/design/<视频名称>.md`。
+     填不出的格留 {待定} 并注明依据缺失，不允许编造。
    - 数值配置节要与所选模板 `assets/scripts/<template>/<Template>Config.ts` 的字段一一对应；填不出来的字段保留模板默认值并注明。
    - 关键帧截图挑 3-6 张有代表性的复制到 `docs/design/<视频名称>-frames/`，在资产清单中引用。
 

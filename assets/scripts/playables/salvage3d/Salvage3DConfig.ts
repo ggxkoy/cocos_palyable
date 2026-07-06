@@ -4,7 +4,7 @@
 export const SALVAGE3D_CONFIG = {
     ctaUrl: 'https://lastwar.onelink.me/PXmq/playable',
     texts: {
-        guide: 'Drag the wreck to recycle',
+        guide: 'Hold & drag to move',
         manage: 'Arm the defense line',
         boom: 'Full firepower online!',
         end: 'Defense line secured',
@@ -47,6 +47,8 @@ export const SALVAGE3D_CONFIG = {
     ],
     padRadius: 1.0,
     vaultRadius: 1.8,
+    // 站上目标牌驻留购买（摇杆操控下的消费方式，替代点击）。
+    dwellTime: 0.45,
     avatarSpeed: 3.8,
     workerSpeed: 3.4,
     capacity: 3,

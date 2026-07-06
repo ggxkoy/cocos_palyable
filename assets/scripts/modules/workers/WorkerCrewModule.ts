@@ -1,4 +1,4 @@
-import { Color, Node } from 'cc';
+import { Color, Node, Prefab, instantiate } from 'cc';
 import { createBox3D } from '../../common3d/Placeholder3D';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { WorkerCrewSim } from './WorkerCrewSim';
@@ -20,6 +20,7 @@ export class WorkerCrewModule implements PlayableModule {
     constructor(
         private readonly workers: WorkerCrewSim,
         private readonly capacity: number,
+        private readonly workerPrefab: Prefab | null = null,
     ) {}
 
     public start(context: ModuleContext): void {
@@ -35,8 +36,14 @@ export class WorkerCrewModule implements PlayableModule {
             if (!view) {
                 const root = new Node(`Worker${worker.id}`);
                 this.context.world.addChild(root);
-                createBox3D('Body', root, 0, 0.38, 0, 0.42, 0.76, 0.36, BODY);
-                createBox3D('Head', root, 0, 0.95, 0, 0.3, 0.3, 0.3, HEAD);
+                if (this.workerPrefab) {
+                    const model = instantiate(this.workerPrefab);
+                    model.name = 'WorkerModel';
+                    root.addChild(model);
+                } else {
+                    createBox3D('Body', root, 0, 0.38, 0, 0.42, 0.76, 0.36, BODY);
+                    createBox3D('Head', root, 0, 0.95, 0, 0.3, 0.3, 0.3, HEAD);
+                }
                 const bars: Node[] = [];
                 for (let i = 0; i < this.capacity; i += 1) {
                     const bar = createBox3D(`Carry${i}`, root, 0, 1.22 + i * 0.18, 0, 0.36, 0.12, 0.26, CARRY);

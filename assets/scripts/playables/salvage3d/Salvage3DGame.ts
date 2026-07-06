@@ -1,4 +1,4 @@
-import { _decorator, Camera, Component, Node, Prefab, director } from 'cc';
+import { _decorator, Camera, Component, Material, Node, Prefab, director } from 'cc';
 import { installAdEventListeners } from '../../common/PlayableSdk';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { AvatarModule } from '../../modules/avatar/AvatarModule';
@@ -20,11 +20,32 @@ const { ccclass, property } = _decorator;
 // 拼接新 playable 时替换配置与清单即可，模块本体不改。
 @ccclass('Salvage3DGame')
 export class Salvage3DGame extends Component {
+    // 美术槽位与 assets/art/salvage3d/incoming/ 的编号目录一一对应，
+    // 留空即用占位盒子：01→player、02→wreck、03→plane、04→depot、
+    // 05→turret、06→enemy、07→groundMaterial（做成 Material 拖入）。
     @property(Prefab)
     private playerPrefab: Prefab | null = null;
 
     @property(Prefab)
+    private workerPrefab: Prefab | null = null;
+
+    @property(Prefab)
+    private wreckPrefab: Prefab | null = null;
+
+    @property(Prefab)
+    private planePrefab: Prefab | null = null;
+
+    @property(Prefab)
+    private depotPrefab: Prefab | null = null;
+
+    @property(Prefab)
     private turretPrefab: Prefab | null = null;
+
+    @property(Prefab)
+    private enemyPrefab: Prefab | null = null;
+
+    @property(Material)
+    private groundMaterial: Material | null = null;
 
     private readonly sim = createSalvageSim(SALVAGE3D_CONFIG);
     private modules: PlayableModule[] = [];
@@ -53,12 +74,12 @@ export class Salvage3DGame extends Component {
                 ground: config.world.ground,
                 depot: config.world.depot,
                 hordeLineZ: config.world.hordeLineZ,
-            }, this.sim.harvest),
-            new HarvestModule(this.sim.harvest, config.veinStock),
-            new GoalChainModule(this.sim.goal, this.sim.economy, config.world.vault),
-            new DefenseModule(this.sim.defense, config.world.turrets, this.turretPrefab),
-            new WorkerCrewModule(this.sim.workers, config.capacity),
-            new AvatarModule(this.sim.avatar, this.sim.goal, config.capacity, this.playerPrefab),
+            }, this.sim.harvest, this.depotPrefab, this.groundMaterial),
+            new HarvestModule(this.sim.harvest, config.veinStock, this.wreckPrefab),
+            new GoalChainModule(this.sim.goal, this.sim.economy, config.world.vault, this.planePrefab),
+            new DefenseModule(this.sim.defense, config.world.turrets, this.turretPrefab, this.enemyPrefab),
+            new WorkerCrewModule(this.sim.workers, config.capacity, this.workerPrefab),
+            new AvatarModule(this.sim.avatar, config.capacity, this.playerPrefab),
             new GuideModule(this.sim.goal, this.sim.avatar, this.sim.harvest, config.world.depot, config.capacity),
             new HudModule(config.texts, this.sim.economy, this.sim.goal, config.defense.ammoCap),
             new EndCardModule(config.texts, config.ctaUrl),

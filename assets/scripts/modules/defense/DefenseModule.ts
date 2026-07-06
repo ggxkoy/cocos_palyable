@@ -18,6 +18,7 @@ export class DefenseModule implements PlayableModule {
         private readonly defense: DefenseSim,
         private readonly turrets: ReadonlyArray<{ readonly x: number; readonly z: number }>,
         private readonly turretPrefab: Prefab | null,
+        private readonly enemyPrefab: Prefab | null,
     ) {}
 
     public start(context: ModuleContext): void {
@@ -44,12 +45,19 @@ export class DefenseModule implements PlayableModule {
         for (const enemy of this.defense.enemies) {
             let node = this.enemyNodes.get(enemy.id);
             if (!node) {
-                node = createBox3D(`Enemy${enemy.id}`, this.context.world, enemy.x, 0.35, enemy.z, 0.5, 0.7, 0.5, ENEMY);
+                if (this.enemyPrefab) {
+                    node = instantiate(this.enemyPrefab);
+                    node.name = `Enemy${enemy.id}`;
+                    node.setPosition(enemy.x, 0, enemy.z);
+                    this.context.world.addChild(node);
+                } else {
+                    node = createBox3D(`Enemy${enemy.id}`, this.context.world, enemy.x, 0.35, enemy.z, 0.5, 0.7, 0.5, ENEMY);
+                }
                 this.enemyNodes.set(enemy.id, node);
             }
             node.active = enemy.alive;
             if (enemy.alive) {
-                node.setPosition(enemy.x, 0.35, enemy.z);
+                node.setPosition(enemy.x, this.enemyPrefab ? 0 : 0.35, enemy.z);
             }
         }
 

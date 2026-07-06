@@ -66,8 +66,11 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
         purchases: config.purchases,
         padRadius: config.padRadius,
         vaultRadius: config.vaultRadius,
+        dwellTime: config.dwellTime,
         boomDuration: config.boomDuration,
     }, economy, bus);
+    // 踩牌购买：目标链盯着主角的位置。
+    goal.attachPresence(() => ({ x: avatar.x, z: avatar.z }));
 
     const defense = new DefenseSim({
         turrets: world.turrets,
