@@ -1,5 +1,9 @@
 // 3D 模块化实例：废土打捞防线（docs/design/army-salvage-defense.md）。
-// 世界坐标为米（XZ 平面，+x 右，-z 远/画面上方），相机为等距斜视。
+// 世界坐标为米（XZ 平面，+x 右，-z 远/画面上方），相机等距斜视并跟随主角。
+// 大地图分三屏（各约一个画面高），沿 z 轴排布：
+//   北（z≈-13）采集区：敲残骸掉金子/木材；大飞机锚点在最深处（z≈-17.5）
+//   中（z≈0）  转换区：回收站换金币弹药、雇佣目标牌、出生点
+//   南（z≈+13）防守区：炮塔防线抵御丧尸渗透波与终局敌潮
 // 拼接新 playable = 换一份这样的配置 + 挑选模块清单（见 Salvage3DGame）。
 export const SALVAGE3D_CONFIG = {
     ctaUrl: 'https://lastwar.onelink.me/PXmq/playable',
@@ -18,50 +22,70 @@ export const SALVAGE3D_CONFIG = {
         ammoPrefix: 'AMMO ',
     },
     world: {
-        ground: { width: 10.5, length: 22 },
+        ground: { width: 11, length: 44 },
         zones: [
-            { id: 1, x: -2.4, z: -3.4 },
-            { id: 2, x: 2.4, z: -3.4 },
+            { id: 1, x: -2.4, z: -13, yieldKind: 'gold' },
+            { id: 2, x: 2.4, z: -13, yieldKind: 'wood' },
         ],
         veinOffsets: [
             { x: -0.9, z: -0.2 },
             { x: 0.2, z: -0.9 },
             { x: 0.8, z: 0.5 },
         ],
-        depot: { x: 0, z: 2.6 },
-        avatarSpawn: { x: 0, z: 4.2 },
-        vault: { x: 0, z: -6.4 },
+        depot: { x: 0, z: 0 },
+        avatarSpawn: { x: 0, z: 3 },
+        vault: { x: 0, z: -17.5 },
         turrets: [
-            { x: -1.9, z: 4.6 },
-            { x: 1.9, z: 4.6 },
+            { x: -1.9, z: 12.5 },
+            { x: 1.9, z: 12.5 },
         ],
-        hordeSpawnZ: 9.4,
-        hordeLineZ: 5.8,
+        hordeSpawnZ: 20.5,
+        hordeLineZ: 13.6,
     },
-    // 目标链：严格按顺序；最后一环打捞大飞机（vault）触发防线演出结算。
+    // 目标链：严格按顺序；最后一环打捞大飞机（vault，采集区最深处），
+    // 由玩家亲手走上去触发防线演出结算。
     purchases: [
-        { id: 'hire1', kind: 'hire', cost: 15, x: -1.9, z: 5.8 },
-        { id: 'zone2', kind: 'unlock', cost: 30, x: 1.9, z: 5.8 },
-        { id: 'hire2', kind: 'hire', cost: 45, x: -1.9, z: 5.8 },
-        { id: 'vault', kind: 'vault', cost: 80, x: 0, z: -6.4 },
+        { id: 'hire1', kind: 'hire', cost: 15, x: -2, z: 2.6 },
+        { id: 'zone2', kind: 'unlock', cost: 30, x: 2, z: 2.6 },
+        { id: 'hire2', kind: 'hire', cost: 45, x: -2, z: 2.6 },
+        { id: 'vault', kind: 'vault', cost: 80, x: 0, z: -17.5 },
     ],
     padRadius: 1.0,
-    vaultRadius: 1.8,
-    // 站上目标牌驻留购买（摇杆操控下的消费方式，替代点击）。
+    vaultRadius: 2.0,
+    // 站上目标牌驻留购买（摇杆操控下的消费方式）。
     dwellTime: 0.45,
-    avatarSpeed: 3.8,
-    workerSpeed: 3.4,
-    capacity: 3,
-    strikeInterval: 0.28,
-    yieldPerStrike: 1,
+    avatarSpeed: 4.6,
+    workerSpeed: 4.4,
+    capacity: 5,
+    strikeInterval: 0.26,
     veinStock: 6,
-    veinRespawn: 2.5,
+    veinRespawn: 2.2,
     depositTime: 0.3,
-    depositRange: 1.5,
-    actionRange: 0.9,
-    detectRange: 8,
-    goldPerBar: 5,
-    // 演出时长要覆盖：小兵 24 发 + BOSS 12 发 ≈ 4.3s 射击。
+    depositRange: 1.6,
+    actionRange: 1.0,
+    detectRange: 9,
+    // 掉落物：类型决定价值与表现（金子/木材…），走近自动背上。
+    pickups: {
+        pickupRange: 1.35,
+        valueByKind: { gold: 5, wood: 3 } as Record<string, number>,
+    },
+    // 主角战斗：范围内最近敌人按距离选近战/远程。
+    avatarCombat: {
+        meleeRange: 1.3,
+        rangedRange: 4.5,
+        attackInterval: 0.4,
+        attackDamage: 1,
+    },
+    // 动画状态机 → FBX 剪辑名映射（01_主角的动画文件；名字按编辑器导入结果调整）。
+    animClips: {
+        idle: 'idle1',
+        walk: 'walk1',
+        collect: 'idle2',
+        strike: 'idle3',
+        melee: 'idle4',
+        ranged: 'talk',
+        deposit: 'idle2',
+    } as Record<string, string>,
     boomDuration: 5.4,
     defense: {
         enemyCount: 24,
@@ -71,12 +95,17 @@ export const SALVAGE3D_CONFIG = {
         bossHp: 12,
         bossSpeed: 1.1,
         fireInterval: 0.12,
-        ammoPerBar: 2,
+        // 渗透波：首次雇佣后小股丧尸持续压线（中期压力）。
+        trickleInterval: 6.5,
+        trickleCount: 2,
+        ammoPerItem: 2,
         ammoCap: 80,
     },
     camera: {
-        position: { x: 0, y: 12.5, z: 11.5 },
-        lookAt: { x: 0, y: 0, z: -0.8 },
+        // 跟随主角的等距机位：offset 相对主角，damp 越大跟得越紧。
+        offset: { x: 0, y: 12.5, z: 11.5 },
+        lookOffset: { x: 0, y: 0, z: -0.8 },
+        followDamp: 6,
         fov: 45,
     },
 } as const;

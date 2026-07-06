@@ -4,6 +4,7 @@ export interface HarvestZone {
     readonly id: number;
     readonly x: number;
     readonly z: number;
+    readonly yieldKind: string;
     unlocked: boolean;
 }
 
@@ -12,12 +13,13 @@ export interface HarvestVein {
     readonly zoneId: number;
     readonly x: number;
     readonly z: number;
+    readonly yieldKind: string;
     stock: number;
     respawnTimer: number;
 }
 
 export interface HarvestConfig {
-    readonly zones: ReadonlyArray<{ readonly id: number; readonly x: number; readonly z: number }>;
+    readonly zones: ReadonlyArray<{ readonly id: number; readonly x: number; readonly z: number; readonly yieldKind: string }>;
     readonly veinOffsets: ReadonlyArray<{ readonly x: number; readonly z: number }>;
     readonly veinStock: number;
     readonly veinRespawn: number;
@@ -32,6 +34,7 @@ export class HarvestSim {
             id: zone.id,
             x: zone.x,
             z: zone.z,
+            yieldKind: zone.yieldKind,
             unlocked: index === 0,
         }));
         let veinId = 1;
@@ -42,6 +45,7 @@ export class HarvestSim {
                     zoneId: zone.id,
                     x: zone.x + offset.x,
                     z: zone.z + offset.z,
+                    yieldKind: zone.yieldKind,
                     stock: config.veinStock,
                     respawnTimer: 0,
                 });
@@ -104,15 +108,15 @@ export class HarvestSim {
         return best;
     }
 
-    // 命中一次：库存 -1，敲空进入重生倒计时；返回产出。
-    public hit(vein: HarvestVein, yieldPerStrike: number): number {
+    // 命中一次：库存 -1，敲空进入重生倒计时；返回掉落物类型（金子/木材…）。
+    public hit(vein: HarvestVein): string | null {
         if (vein.stock <= 0) {
-            return 0;
+            return null;
         }
         vein.stock -= 1;
         if (vein.stock <= 0) {
             vein.respawnTimer = this.config.veinRespawn;
         }
-        return yieldPerStrike;
+        return vein.yieldKind;
     }
 }

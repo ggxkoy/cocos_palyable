@@ -85,6 +85,7 @@ declare module 'cc' {
     public getChildByPath(path: string): Node | null;
     public addComponent<T extends Component>(classConstructor: new (...args: never[]) => T): T;
     public getComponent<T extends Component>(classConstructor: new (...args: never[]) => T): T | null;
+    public getComponentInChildren<T extends Component>(classConstructor: new (...args: never[]) => T): T | null;
     public on(event: string, callback: (...args: never[]) => void, target?: unknown): void;
     public off(event: string, callback?: (...args: never[]) => void, target?: unknown): void;
   }
@@ -177,6 +178,16 @@ declare module 'cc' {
   }
 
   export class DirectionalLight extends Component {}
+
+  export class AnimationState {
+    public readonly name: string;
+  }
+
+  export class SkeletalAnimation extends Component {
+    public play(name?: string): void;
+    public crossFade(name: string, duration?: number): void;
+    public getState(name: string): AnimationState | null;
+  }
 
   export class Camera extends Component {
     public static readonly ProjectionType: {

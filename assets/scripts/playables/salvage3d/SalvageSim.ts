@@ -4,6 +4,7 @@ import { DefenseSim } from '../../modules/defense/DefenseSim';
 import { EconomySim } from '../../modules/economy/EconomySim';
 import { GoalChainSim } from '../../modules/goalchain/GoalChainSim';
 import { HarvestSim } from '../../modules/harvest/HarvestSim';
+import { PickupSim } from '../../modules/pickups/PickupSim';
 import { WorkerCrewSim } from '../../modules/workers/WorkerCrewSim';
 import { SALVAGE3D_CONFIG, Salvage3DConfig } from './Salvage3DConfig';
 
@@ -13,6 +14,7 @@ export interface SalvageSim {
     readonly bus: EventBus;
     readonly economy: EconomySim;
     readonly harvest: HarvestSim;
+    readonly pickups: PickupSim;
     readonly avatar: AvatarSim;
     readonly workers: WorkerCrewSim;
     readonly goal: GoalChainSim;
@@ -25,8 +27,8 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
     const world = config.world;
 
     const economy = new EconomySim({
-        goldPerBar: config.goldPerBar,
-        ammoPerBar: config.defense.ammoPerBar,
+        valueByKind: config.pickups.valueByKind,
+        ammoPerItem: config.defense.ammoPerItem,
         ammoCap: config.defense.ammoCap,
     });
 
@@ -37,40 +39,7 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
         veinRespawn: config.veinRespawn,
     });
 
-    const avatar = new AvatarSim({
-        spawn: world.avatarSpawn,
-        depot: world.depot,
-        speed: config.avatarSpeed,
-        capacity: config.capacity,
-        strikeInterval: config.strikeInterval,
-        yieldPerStrike: config.yieldPerStrike,
-        depositTime: config.depositTime,
-        actionRange: config.actionRange,
-        depositRange: config.depositRange,
-        bounds: { halfWidth: world.ground.width / 2 - 0.4, halfLength: world.ground.length / 2 - 0.4 },
-    }, harvest, economy, bus);
-
-    const workers = new WorkerCrewSim({
-        spawn: world.avatarSpawn,
-        depot: world.depot,
-        speed: config.workerSpeed,
-        capacity: config.capacity,
-        strikeInterval: config.strikeInterval,
-        yieldPerStrike: config.yieldPerStrike,
-        depositTime: config.depositTime,
-        actionRange: config.actionRange,
-        detectRange: config.detectRange,
-    }, harvest, economy, bus);
-
-    const goal = new GoalChainSim({
-        purchases: config.purchases,
-        padRadius: config.padRadius,
-        vaultRadius: config.vaultRadius,
-        dwellTime: config.dwellTime,
-        boomDuration: config.boomDuration,
-    }, economy, bus);
-    // 踩牌购买：目标链盯着主角的位置。
-    goal.attachPresence(() => ({ x: avatar.x, z: avatar.z }));
+    const pickups = new PickupSim();
 
     const defense = new DefenseSim({
         turrets: world.turrets,
@@ -83,16 +52,67 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
         spawnZ: world.hordeSpawnZ,
         lineZ: world.hordeLineZ,
         fieldHalfWidth: world.ground.width / 2 - 0.8,
+        trickleInterval: config.defense.trickleInterval,
+        trickleCount: config.defense.trickleCount,
     }, economy, bus);
 
-    // 模块接线：目标链的购买事件驱动其他模块的世界变化。
-    bus.on('goal:hire', () => workers.hire());
+    const avatar = new AvatarSim({
+        spawn: world.avatarSpawn,
+        depot: world.depot,
+        speed: config.avatarSpeed,
+        capacity: config.capacity,
+        strikeInterval: config.strikeInterval,
+        depositTime: config.depositTime,
+        actionRange: config.actionRange,
+        depositRange: config.depositRange,
+        pickupRange: config.pickups.pickupRange,
+        meleeRange: config.avatarCombat.meleeRange,
+        rangedRange: config.avatarCombat.rangedRange,
+        attackInterval: config.avatarCombat.attackInterval,
+        attackDamage: config.avatarCombat.attackDamage,
+        bounds: { halfWidth: world.ground.width / 2 - 0.4, halfLength: world.ground.length / 2 - 0.4 },
+    }, harvest, pickups, defense, economy, bus);
+
+    const workers = new WorkerCrewSim({
+        spawn: world.avatarSpawn,
+        depot: world.depot,
+        speed: config.workerSpeed,
+        capacity: config.capacity,
+        strikeInterval: config.strikeInterval,
+        depositTime: config.depositTime,
+        actionRange: config.actionRange,
+        detectRange: config.detectRange,
+        pickupRange: config.pickups.pickupRange,
+    }, harvest, pickups, economy, bus);
+
+    const goal = new GoalChainSim({
+        purchases: config.purchases,
+        padRadius: config.padRadius,
+        vaultRadius: config.vaultRadius,
+        dwellTime: config.dwellTime,
+        boomDuration: config.boomDuration,
+    }, economy, bus);
+    // 踩牌购买：目标链盯着主角的位置。
+    goal.attachPresence(() => ({ x: avatar.x, z: avatar.z }));
+
+    // 模块接线：目标链购买驱动世界变化；敌人倒地掉金币。
+    bus.on('goal:hire', () => {
+        if (workers.workers.length === 0) {
+            defense.startTrickle();
+        }
+        workers.hire();
+    });
     bus.on('goal:unlock', () => harvest.unlockNextZone());
+    bus.on('enemy:down', payload => {
+        const down = payload as { x: number; z: number };
+        pickups.spawn('gold', down.x, down.z);
+    });
 
     return {
         bus,
         economy,
         harvest,
+        pickups,
         avatar,
         workers,
         goal,

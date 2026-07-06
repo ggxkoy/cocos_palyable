@@ -2,6 +2,7 @@ import { Action, BtNode, BtStatus, Condition, Repeat, Selector, Sequence } from 
 import { EventBus } from '../../framework/EventBus';
 import { EconomySim } from '../economy/EconomySim';
 import { HarvestSim, HarvestVein } from '../harvest/HarvestSim';
+import { PickupSim } from '../pickups/PickupSim';
 
 // 雇员模块（纯逻辑）：玩家购买获得的自动化。感知式行为树大脑：
 // 满载回投 → 范围索敌并自动开采 → 有货无目标先回投 → 向矿区集结。
@@ -11,10 +12,10 @@ export interface WorkerCrewConfig {
     readonly speed: number;
     readonly capacity: number;
     readonly strikeInterval: number;
-    readonly yieldPerStrike: number;
     readonly depositTime: number;
     readonly actionRange: number;
     readonly detectRange: number;
+    readonly pickupRange: number;
 }
 
 export type CrewWorkerTask = 'rally' | 'approach' | 'strike' | 'toDepot' | 'deposit';
@@ -23,7 +24,7 @@ export interface CrewWorker {
     readonly id: number;
     x: number;
     z: number;
-    carrying: number;
+    readonly carried: string[];
     task: CrewWorkerTask;
     actionTimer: number;
     targetVeinId: number | null;
@@ -42,6 +43,7 @@ export class WorkerCrewSim {
     constructor(
         private readonly config: WorkerCrewConfig,
         private readonly harvest: HarvestSim,
+        private readonly pickups: PickupSim,
         private readonly economy: EconomySim,
         private readonly bus: EventBus,
     ) {}
@@ -51,7 +53,7 @@ export class WorkerCrewSim {
             id: this.nextId,
             x: this.config.spawn.x + (this.nextId - 1) * 0.5,
             z: this.config.spawn.z,
-            carrying: 0,
+            carried: [],
             task: 'rally',
             actionTimer: 0,
             targetVeinId: null,
@@ -64,6 +66,13 @@ export class WorkerCrewSim {
 
     public tick(deltaTime: number): void {
         for (const worker of this.workers) {
+            // 与主角同款的范围自动拾取：掉落物走近即背上。
+            if (worker.carried.length < this.config.capacity) {
+                const pickup = this.pickups.nearestAlive(worker.x, worker.z, this.config.pickupRange);
+                if (pickup) {
+                    worker.carried.push(this.pickups.collect(pickup));
+                }
+            }
             const brain = this.brains.get(worker.id);
             brain?.tree.tick(brain.context, deltaTime);
         }
@@ -72,7 +81,7 @@ export class WorkerCrewSim {
     private buildBrain(): BtNode<WorkerContext> {
         return new Repeat(new Selector<WorkerContext>([
             new Sequence<WorkerContext>([
-                new Condition(context => context.worker.carrying >= this.config.capacity),
+                new Condition(context => context.worker.carried.length >= this.config.capacity),
                 new Action((context, dt) => this.goToDepot(context.worker, dt)),
                 new Action((context, dt) => this.deposit(context.worker, dt)),
             ]),
@@ -82,7 +91,7 @@ export class WorkerCrewSim {
                 new Action((context, dt) => this.strike(context.worker, dt)),
             ]),
             new Sequence<WorkerContext>([
-                new Condition(context => context.worker.carrying > 0),
+                new Condition(context => context.worker.carried.length > 0),
                 new Action((context, dt) => this.goToDepot(context.worker, dt)),
                 new Action((context, dt) => this.deposit(context.worker, dt)),
             ]),
@@ -121,12 +130,17 @@ export class WorkerCrewSim {
         }
         worker.task = 'strike';
         worker.actionTimer += deltaTime;
-        while (worker.actionTimer >= this.config.strikeInterval && vein.stock > 0 && worker.carrying < this.config.capacity) {
+        while (worker.actionTimer >= this.config.strikeInterval && vein.stock > 0 && worker.carried.length < this.config.capacity) {
             worker.actionTimer -= this.config.strikeInterval;
-            worker.carrying += this.harvest.hit(vein, this.config.yieldPerStrike);
-            this.bus.emit('fx:strike', { x: vein.x, z: vein.z });
+            const kind = this.harvest.hit(vein);
+            if (kind) {
+                // 敲落的资源散在残骸旁，由自动拾取捡起（与主角同一套表现）。
+                const spread = ((vein.stock * 41) % 100) / 100 - 0.5;
+                this.bus.emit('fx:strike', { x: vein.x, z: vein.z });
+                this.pickups.spawn(kind, vein.x + spread, vein.z + 0.5);
+            }
         }
-        if (worker.carrying >= this.config.capacity || vein.stock <= 0) {
+        if (worker.carried.length >= this.config.capacity || vein.stock <= 0) {
             worker.actionTimer = 0;
             return BtStatus.Success;
         }
@@ -146,8 +160,8 @@ export class WorkerCrewSim {
             return BtStatus.Running;
         }
         worker.actionTimer = 0;
-        const amount = this.economy.deposit(worker.carrying);
-        worker.carrying = 0;
+        const amount = this.economy.depositLoad(worker.carried);
+        worker.carried.length = 0;
         this.bus.emit('fx:deposit', { x: worker.x, z: worker.z, amount });
         worker.task = 'rally';
         return BtStatus.Success;

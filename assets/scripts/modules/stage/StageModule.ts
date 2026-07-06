@@ -48,7 +48,9 @@ export class StageModule implements PlayableModule {
                 renderer.material = this.groundMaterial;
             }
         }
-        createBox3D('Swamp', world, 0, -0.02, -7.6, ground.width, 0.08, 5.4, SWAMP);
+        // 泥潭带盖住采集区（北屏），防线带在南屏，三屏共用一块大地面。
+        const harvestZ = this.harvest.zones.reduce((sum, zone) => sum + zone.z, 0) / Math.max(1, this.harvest.zones.length);
+        createBox3D('Swamp', world, 0, -0.02, harvestZ - 1.2, ground.width, 0.08, 8.5, SWAMP);
         createBox3D('DefenseLine', world, 0, 0.01, this.config.hordeLineZ, ground.width, 0.06, 0.5, LINE);
 
         for (const zone of this.harvest.zones) {

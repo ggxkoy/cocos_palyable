@@ -9,6 +9,7 @@ import { GoalChainModule } from '../../modules/goalchain/GoalChainModule';
 import { GuideModule } from '../../modules/guide/GuideModule';
 import { HarvestModule } from '../../modules/harvest/HarvestModule';
 import { HudModule } from '../../modules/hud/HudModule';
+import { PickupModule } from '../../modules/pickups/PickupModule';
 import { StageModule } from '../../modules/stage/StageModule';
 import { WorkerCrewModule } from '../../modules/workers/WorkerCrewModule';
 import { SALVAGE3D_CONFIG } from './Salvage3DConfig';
@@ -75,17 +76,18 @@ export class Salvage3DGame extends Component {
         };
 
         this.modules = [
-            new CameraRigModule(config.camera, uiCamera),
+            new CameraRigModule(config.camera, uiCamera, () => ({ x: this.sim.avatar.x, z: this.sim.avatar.z })),
             new StageModule({
                 ground: config.world.ground,
                 depot: config.world.depot,
                 hordeLineZ: config.world.hordeLineZ,
             }, this.sim.harvest, this.depotPrefab, this.groundMaterial),
             new HarvestModule(this.sim.harvest, config.veinStock, this.wreckPrefab),
+            new PickupModule(this.sim.pickups),
             new GoalChainModule(this.sim.goal, this.sim.economy, config.world.vault, this.planePrefab),
             new DefenseModule(this.sim.defense, config.world.turrets, this.turretPrefab, this.enemyPrefab, this.turretSoldierPrefab, this.bossPrefab),
             new WorkerCrewModule(this.sim.workers, config.capacity, this.workerPrefab),
-            new AvatarModule(this.sim.avatar, config.capacity, this.playerPrefab),
+            new AvatarModule(this.sim.avatar, this.playerPrefab, config.animClips),
             new GuideModule(this.sim.goal, this.sim.avatar, this.sim.harvest, config.world.depot, config.capacity),
             new HudModule(config.texts, this.sim.economy, this.sim.goal, config.defense.ammoCap),
             new EndCardModule(config.texts, config.ctaUrl),

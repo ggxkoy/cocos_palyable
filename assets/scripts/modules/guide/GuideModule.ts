@@ -39,7 +39,7 @@ export class GuideModule implements PlayableModule {
         const next = this.goal.next();
         if (next && this.goal.canAffordNext()) {
             target = next;
-        } else if (this.avatar.carrying >= this.capacity) {
+        } else if (this.avatar.carried.length >= this.capacity) {
             target = this.depot;
         } else {
             target = this.harvest.nearestStocked(this.avatar.x, this.avatar.z, 99);

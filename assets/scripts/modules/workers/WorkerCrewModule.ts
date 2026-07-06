@@ -55,7 +55,7 @@ export class WorkerCrewModule implements PlayableModule {
             }
             view.root.setPosition(worker.x, 0, worker.z);
             view.bars.forEach((bar, index) => {
-                bar.active = worker.carrying > index;
+                bar.active = worker.carried.length > index;
             });
         }
     }

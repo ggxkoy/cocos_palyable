@@ -1,8 +1,9 @@
 // 经济模块（纯逻辑）：金币 + 弹药两条资源线。
-// 入库时金币/弹药同时增长，防御演出按发消耗弹药。
+// 背上的道具按类型计价（金子/木材价值不同），入库同时补弹药；
+// 防御射击按发消耗弹药，没弹药炮塔就停火（弹药危机感的来源）。
 export interface EconomyConfig {
-    readonly goldPerBar: number;
-    readonly ammoPerBar: number;
+    readonly valueByKind: Readonly<Record<string, number>>;
+    readonly ammoPerItem: number;
     readonly ammoCap: number;
 }
 
@@ -12,11 +13,15 @@ export class EconomySim {
 
     constructor(private readonly config: EconomyConfig) {}
 
-    public deposit(bars: number): number {
-        const amount = bars * this.config.goldPerBar;
-        this.gold += amount;
-        this.ammo = Math.min(this.config.ammoCap, this.ammo + bars * this.config.ammoPerBar);
-        return amount;
+    // 把一背包类型化道具换成金币与弹药，返回换得的金币数。
+    public depositLoad(load: ReadonlyArray<string>): number {
+        let value = 0;
+        for (const kind of load) {
+            value += this.config.valueByKind[kind] ?? 1;
+        }
+        this.gold += value;
+        this.ammo = Math.min(this.config.ammoCap, this.ammo + load.length * this.config.ammoPerItem);
+        return value;
     }
 
     public canAfford(cost: number): boolean {
@@ -29,6 +34,10 @@ export class EconomySim {
         }
         this.gold -= cost;
         return true;
+    }
+
+    public hasAmmo(): boolean {
+        return this.ammo > 0;
     }
 
     public consumeAmmo(count: number): void {
