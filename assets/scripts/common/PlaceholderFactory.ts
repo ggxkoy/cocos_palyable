@@ -27,6 +27,7 @@ export function getWhiteFrame(): SpriteFrame {
 
     const frame = new SpriteFrame();
     frame.texture = texture;
+    frame.packable = false;
     cachedWhiteFrame = frame;
     return frame;
 }

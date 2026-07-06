@@ -1,0 +1,99 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "36d5f41f-8120-43ab-8c78-7811baa6f3bd",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "ca16a": {
+      "importer": "gltf-animation",
+      "uuid": "36d5f41f-8120-43ab-8c78-7811baa6f3bd@ca16a",
+      "displayName": "",
+      "id": "ca16a",
+      "name": "attack1.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 2
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "4bf5a": {
+      "importer": "gltf-scene",
+      "uuid": "36d5f41f-8120-43ab-8c78-7811baa6f3bd@4bf5a",
+      "displayName": "",
+      "id": "4bf5a",
+      "name": "Monster2@attack1.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 2,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "attack1",
+            "from": 0,
+            "to": 2,
+            "wrapMode": 2,
+            "previousId": "ca16a"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [],
+      "skeletons": [],
+      "textures": [],
+      "materials": [],
+      "scenes": [
+        "36d5f41f-8120-43ab-8c78-7811baa6f3bd@4bf5a"
+      ]
+    }
+  }
+}

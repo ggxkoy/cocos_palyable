@@ -1,0 +1,145 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "28b163ae-71c0-4bbc-85bd-172c031b19e7",
+  "files": [],
+  "subMetas": {
+    "cbd78": {
+      "importer": "gltf-mesh",
+      "uuid": "28b163ae-71c0-4bbc-85bd-172c031b19e7@cbd78",
+      "displayName": "",
+      "id": "cbd78",
+      "name": "s1.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 596
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "438fe": {
+      "importer": "gltf-skeleton",
+      "uuid": "28b163ae-71c0-4bbc-85bd-172c031b19e7@438fe",
+      "displayName": "",
+      "id": "438fe",
+      "name": "UnnamedSkeleton.skeleton",
+      "userData": {
+        "gltfIndex": 0,
+        "jointsLength": 27
+      },
+      "ver": "1.0.1",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "7c0f3": {
+      "importer": "texture",
+      "uuid": "28b163ae-71c0-4bbc-85bd-172c031b19e7@7c0f3",
+      "displayName": "",
+      "id": "7c0f3",
+      "name": "贴图 #19.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": false,
+        "imageUuidOrDatabaseUri": "db://assets/art/salvage3d/incoming"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "958b3": {
+      "importer": "gltf-material",
+      "uuid": "28b163ae-71c0-4bbc-85bd-172c031b19e7@958b3",
+      "displayName": "",
+      "id": "958b3",
+      "name": "Material #1.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "a8ceb": {
+      "importer": "gltf-scene",
+      "uuid": "28b163ae-71c0-4bbc-85bd-172c031b19e7@a8ceb",
+      "displayName": "",
+      "id": "a8ceb",
+      "name": "Monster2_model.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "name": "贴图 #19",
+        "uri": "db://assets/art/salvage3d/incoming"
+      }
+    ],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "28b163ae-71c0-4bbc-85bd-172c031b19e7@cbd78"
+      ],
+      "skeletons": [
+        "28b163ae-71c0-4bbc-85bd-172c031b19e7@438fe"
+      ],
+      "textures": [
+        "28b163ae-71c0-4bbc-85bd-172c031b19e7@7c0f3"
+      ],
+      "materials": [
+        "28b163ae-71c0-4bbc-85bd-172c031b19e7@958b3"
+      ],
+      "scenes": [
+        "28b163ae-71c0-4bbc-85bd-172c031b19e7@a8ceb"
+      ]
+    }
+  }
+}

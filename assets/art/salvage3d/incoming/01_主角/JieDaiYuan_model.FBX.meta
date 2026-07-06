@@ -1,0 +1,186 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "6fe6377e-9821-497a-906f-8d4bd056402c",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "cbd78": {
+      "importer": "gltf-mesh",
+      "uuid": "6fe6377e-9821-497a-906f-8d4bd056402c@cbd78",
+      "displayName": "",
+      "id": "cbd78",
+      "name": "s1.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 1293
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "73b7f": {
+      "importer": "gltf-animation",
+      "uuid": "6fe6377e-9821-497a-906f-8d4bd056402c@73b7f",
+      "displayName": "",
+      "id": "73b7f",
+      "name": "Take 001.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 0.03333333507180214
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "438fe": {
+      "importer": "gltf-skeleton",
+      "uuid": "6fe6377e-9821-497a-906f-8d4bd056402c@438fe",
+      "displayName": "",
+      "id": "438fe",
+      "name": "UnnamedSkeleton.skeleton",
+      "userData": {
+        "gltfIndex": 0,
+        "jointsLength": 35
+      },
+      "ver": "1.0.1",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "bd34e": {
+      "importer": "texture",
+      "uuid": "6fe6377e-9821-497a-906f-8d4bd056402c@bd34e",
+      "displayName": "",
+      "id": "bd34e",
+      "name": "贴图 #43.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": false,
+        "imageUuidOrDatabaseUri": "db://assets/art/salvage3d/incoming/01_主角/Hero25001_Base_color.png"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "28aab": {
+      "importer": "gltf-material",
+      "uuid": "6fe6377e-9821-497a-906f-8d4bd056402c@28aab",
+      "displayName": "",
+      "id": "28aab",
+      "name": "Hero25001.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "8af10": {
+      "importer": "gltf-scene",
+      "uuid": "6fe6377e-9821-497a-906f-8d4bd056402c@8af10",
+      "displayName": "",
+      "id": "8af10",
+      "name": "JieDaiYuan_model.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "name": "贴图 #43",
+        "uri": "db://assets/art/salvage3d/incoming/01_主角/Hero25001_Base_color.png"
+      }
+    ],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 0.03333333507180214,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "Take 001",
+            "from": 0,
+            "to": 0.03333333507180214,
+            "wrapMode": 2,
+            "previousId": "73b7f"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "6fe6377e-9821-497a-906f-8d4bd056402c@cbd78"
+      ],
+      "skeletons": [
+        "6fe6377e-9821-497a-906f-8d4bd056402c@438fe"
+      ],
+      "textures": [
+        "6fe6377e-9821-497a-906f-8d4bd056402c@bd34e"
+      ],
+      "materials": [
+        "6fe6377e-9821-497a-906f-8d4bd056402c@28aab"
+      ],
+      "scenes": [
+        "6fe6377e-9821-497a-906f-8d4bd056402c@8af10"
+      ]
+    }
+  }
+}

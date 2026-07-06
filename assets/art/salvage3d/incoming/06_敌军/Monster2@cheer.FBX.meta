@@ -1,0 +1,99 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "b361ecce-6b13-4f17-af24-8bb4977948a6",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "e3031": {
+      "importer": "gltf-animation",
+      "uuid": "b361ecce-6b13-4f17-af24-8bb4977948a6@e3031",
+      "displayName": "",
+      "id": "e3031",
+      "name": "cheer.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 3.633333444595337
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "ea787": {
+      "importer": "gltf-scene",
+      "uuid": "b361ecce-6b13-4f17-af24-8bb4977948a6@ea787",
+      "displayName": "",
+      "id": "ea787",
+      "name": "Monster2@cheer.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 3.633333444595337,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "cheer",
+            "from": 0,
+            "to": 3.633333444595337,
+            "wrapMode": 2,
+            "previousId": "e3031"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [],
+      "skeletons": [],
+      "textures": [],
+      "materials": [],
+      "scenes": [
+        "b361ecce-6b13-4f17-af24-8bb4977948a6@ea787"
+      ]
+    }
+  }
+}

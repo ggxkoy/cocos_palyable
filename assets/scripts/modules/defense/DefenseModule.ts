@@ -1,4 +1,4 @@
-import { Color, Node } from 'cc';
+import { Color, Node, Prefab, instantiate } from 'cc';
 import { createBox3D } from '../../common3d/Placeholder3D';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { DefenseFire, DefenseSim } from './DefenseSim';
@@ -17,14 +17,22 @@ export class DefenseModule implements PlayableModule {
     constructor(
         private readonly defense: DefenseSim,
         private readonly turrets: ReadonlyArray<{ readonly x: number; readonly z: number }>,
+        private readonly turretPrefab: Prefab | null,
     ) {}
 
     public start(context: ModuleContext): void {
         this.context = context;
         for (const [index, turret] of this.turrets.entries()) {
-            const root = createBox3D(`Turret${index + 1}`, context.world, turret.x, 0.4, turret.z, 0.9, 0.8, 0.9, TURRET_BASE);
-            const barrel = createBox3D('Barrel', root, 0, 0.35, 0.55, 0.22, 0.22, 0.9, TURRET_BARREL);
-            barrel.setPosition(0, 0.35, 0.55);
+            if (this.turretPrefab) {
+                const root = instantiate(this.turretPrefab);
+                root.name = `Turret${index + 1}`;
+                root.setPosition(turret.x, 0, turret.z);
+                context.world.addChild(root);
+            } else {
+                const root = createBox3D(`Turret${index + 1}`, context.world, turret.x, 0.4, turret.z, 0.9, 0.8, 0.9, TURRET_BASE);
+                const barrel = createBox3D('Barrel', root, 0, 0.35, 0.55, 0.22, 0.22, 0.9, TURRET_BARREL);
+                barrel.setPosition(0, 0.35, 0.55);
+            }
         }
         context.bus.on('fx:fire', payload => this.spawnLaser(payload as DefenseFire));
     }

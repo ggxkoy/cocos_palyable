@@ -1,0 +1,213 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "90712": {
+      "importer": "gltf-mesh",
+      "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79@90712",
+      "displayName": "",
+      "id": "90712",
+      "name": "tuituji_05.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 132
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "2beed": {
+      "importer": "gltf-mesh",
+      "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79@2beed",
+      "displayName": "",
+      "id": "2beed",
+      "name": "tuituji_01.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 316
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "53ca8": {
+      "importer": "gltf-mesh",
+      "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79@53ca8",
+      "displayName": "",
+      "id": "53ca8",
+      "name": "tuituji_04.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 92
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c88bb": {
+      "importer": "gltf-mesh",
+      "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79@c88bb",
+      "displayName": "",
+      "id": "c88bb",
+      "name": "tuituji_02.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 178
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "50bfd": {
+      "importer": "gltf-mesh",
+      "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79@50bfd",
+      "displayName": "",
+      "id": "50bfd",
+      "name": "tuituji_03.mesh",
+      "userData": {
+        "gltfIndex": 4,
+        "triangleCount": 178
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "73b7f": {
+      "importer": "gltf-animation",
+      "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79@73b7f",
+      "displayName": "",
+      "id": "73b7f",
+      "name": "Take 001.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 1.2999999523162842
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "d90a4": {
+      "importer": "gltf-material",
+      "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79@d90a4",
+      "displayName": "",
+      "id": "d90a4",
+      "name": "01 - Default.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e8ecb": {
+      "importer": "gltf-scene",
+      "uuid": "1884f7ad-de29-49e8-8aa0-ee3972612f79@e8ecb",
+      "displayName": "",
+      "id": "e8ecb",
+      "name": "推土机.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 1.2999999523162842,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "Take 001",
+            "from": 0,
+            "to": 1.2999999523162842,
+            "wrapMode": 2,
+            "previousId": "73b7f"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "1884f7ad-de29-49e8-8aa0-ee3972612f79@2beed",
+        "1884f7ad-de29-49e8-8aa0-ee3972612f79@90712",
+        "1884f7ad-de29-49e8-8aa0-ee3972612f79@53ca8",
+        "1884f7ad-de29-49e8-8aa0-ee3972612f79@c88bb",
+        "1884f7ad-de29-49e8-8aa0-ee3972612f79@50bfd"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "1884f7ad-de29-49e8-8aa0-ee3972612f79@d90a4"
+      ],
+      "scenes": [
+        "1884f7ad-de29-49e8-8aa0-ee3972612f79@e8ecb"
+      ]
+    }
+  }
+}

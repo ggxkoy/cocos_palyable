@@ -1,0 +1,438 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "12499": {
+      "importer": "gltf-mesh",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@12499",
+      "displayName": "",
+      "id": "12499",
+      "name": "对象013.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 88
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "95953": {
+      "importer": "gltf-material",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@95953",
+      "displayName": "",
+      "id": "95953",
+      "name": "Material #7.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "96346": {
+      "importer": "gltf-mesh",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@96346",
+      "displayName": "",
+      "id": "96346",
+      "name": "步枪.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 204
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "e9d01": {
+      "importer": "gltf-mesh",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@e9d01",
+      "displayName": "",
+      "id": "e9d01",
+      "name": "A_soldier_bubing11_shenti.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 994
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "a5c28": {
+      "importer": "gltf-mesh",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@a5c28",
+      "displayName": "",
+      "id": "a5c28",
+      "name": "futou.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 82
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "73b7f": {
+      "importer": "gltf-animation",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@73b7f",
+      "displayName": "",
+      "id": "73b7f",
+      "name": "Take 001.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 11.433333396911621
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "438fe": {
+      "importer": "gltf-skeleton",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@438fe",
+      "displayName": "",
+      "id": "438fe",
+      "name": "UnnamedSkeleton.skeleton",
+      "userData": {
+        "gltfIndex": 0,
+        "jointsLength": 30
+      },
+      "ver": "1.0.1",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "fc339": {
+      "importer": "gltf-embeded-image",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@fc339",
+      "displayName": "",
+      "id": "fc339",
+      "name": "A_soldier_bubing13:_file1.image",
+      "userData": {
+        "gltfIndex": 1,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": true,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".json",
+        ".png"
+      ],
+      "subMetas": {}
+    },
+    "425ef": {
+      "importer": "gltf-embeded-image",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@425ef",
+      "displayName": "",
+      "id": "425ef",
+      "name": "贴图 #2.image",
+      "userData": {
+        "gltfIndex": 2,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": true,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".json",
+        ".png"
+      ],
+      "subMetas": {}
+    },
+    "1cdc4": {
+      "importer": "gltf-embeded-image",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@1cdc4",
+      "displayName": "",
+      "id": "1cdc4",
+      "name": "贴图 #3.image",
+      "userData": {
+        "gltfIndex": 3,
+        "fixAlphaTransparencyArtifacts": true,
+        "hasAlpha": true,
+        "type": "texture"
+      },
+      "ver": "1.0.3",
+      "imported": true,
+      "files": [
+        ".json",
+        ".png"
+      ],
+      "subMetas": {}
+    },
+    "eb794": {
+      "importer": "texture",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@eb794",
+      "displayName": "",
+      "id": "eb794",
+      "name": "贴图 #5.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": false,
+        "imageUuidOrDatabaseUri": "db://assets/art/salvage3d/incoming/09_炮塔小兵/小兵1.jpg"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "07431": {
+      "importer": "texture",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@07431",
+      "displayName": "",
+      "id": "07431",
+      "name": "A_soldier_bubing13:_file1.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "24e398fe-68df-4fd6-a516-5ef94887eaef@fc339"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "59f96": {
+      "importer": "texture",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@59f96",
+      "displayName": "",
+      "id": "59f96",
+      "name": "贴图 #2.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "24e398fe-68df-4fd6-a516-5ef94887eaef@425ef"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "bfae8": {
+      "importer": "texture",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@bfae8",
+      "displayName": "",
+      "id": "bfae8",
+      "name": "贴图 #3.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "24e398fe-68df-4fd6-a516-5ef94887eaef@1cdc4"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "b4c46": {
+      "importer": "gltf-material",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@b4c46",
+      "displayName": "",
+      "id": "b4c46",
+      "name": "xiaobing.material",
+      "userData": {
+        "gltfIndex": 1
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "74c03": {
+      "importer": "gltf-material",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@74c03",
+      "displayName": "",
+      "id": "74c03",
+      "name": "Material #4.material",
+      "userData": {
+        "gltfIndex": 2
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "fe5ee": {
+      "importer": "gltf-material",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@fe5ee",
+      "displayName": "",
+      "id": "fe5ee",
+      "name": "Material #5.material",
+      "userData": {
+        "gltfIndex": 3
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "79f50": {
+      "importer": "gltf-scene",
+      "uuid": "24e398fe-68df-4fd6-a516-5ef94887eaef@79f50",
+      "displayName": "",
+      "id": "79f50",
+      "name": "一级兵(2).prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "name": "贴图 #5",
+        "uri": "db://assets/art/salvage3d/incoming/09_炮塔小兵/小兵1.jpg"
+      },
+      {
+        "name": "A_soldier_bubing13:_file1",
+        "uri": "24e398fe-68df-4fd6-a516-5ef94887eaef@fc339"
+      },
+      {
+        "name": "贴图 #2",
+        "uri": "24e398fe-68df-4fd6-a516-5ef94887eaef@425ef"
+      },
+      {
+        "name": "贴图 #3",
+        "uri": "24e398fe-68df-4fd6-a516-5ef94887eaef@1cdc4"
+      }
+    ],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 11.433333396911621,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "Take 001",
+            "from": 0,
+            "to": 11.433333396911621,
+            "wrapMode": 2,
+            "previousId": "73b7f"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@e9d01",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@96346",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@a5c28",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@12499"
+      ],
+      "skeletons": [
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@438fe"
+      ],
+      "textures": [
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@eb794",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@07431",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@59f96",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@bfae8"
+      ],
+      "materials": [
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@95953",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@b4c46",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@74c03",
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@fe5ee"
+      ],
+      "scenes": [
+        "24e398fe-68df-4fd6-a516-5ef94887eaef@79f50"
+      ]
+    }
+  }
+}

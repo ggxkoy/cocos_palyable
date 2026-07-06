@@ -1,0 +1,433 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "49636": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@49636",
+      "displayName": "",
+      "id": "49636",
+      "name": "mutong_Part_12.mesh",
+      "userData": {
+        "gltfIndex": 11,
+        "triangleCount": 142
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "cd41e": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@cd41e",
+      "displayName": "",
+      "id": "cd41e",
+      "name": "mutong_Part_1.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 280
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "98c70": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@98c70",
+      "displayName": "",
+      "id": "98c70",
+      "name": "mutong_Part_2.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 364
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "437a5": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@437a5",
+      "displayName": "",
+      "id": "437a5",
+      "name": "mutong_Part_3.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 204
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "bfda5": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@bfda5",
+      "displayName": "",
+      "id": "bfda5",
+      "name": "mutong_Part_4.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 252
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "8875b": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@8875b",
+      "displayName": "",
+      "id": "8875b",
+      "name": "mutong_Part_5.mesh",
+      "userData": {
+        "gltfIndex": 4,
+        "triangleCount": 208
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "5e39b": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@5e39b",
+      "displayName": "",
+      "id": "5e39b",
+      "name": "mutong_Part_6.mesh",
+      "userData": {
+        "gltfIndex": 5,
+        "triangleCount": 366
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "95e0c": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@95e0c",
+      "displayName": "",
+      "id": "95e0c",
+      "name": "mutong_Part_7.mesh",
+      "userData": {
+        "gltfIndex": 6,
+        "triangleCount": 220
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "06359": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@06359",
+      "displayName": "",
+      "id": "06359",
+      "name": "mutong_Part_8.mesh",
+      "userData": {
+        "gltfIndex": 7,
+        "triangleCount": 264
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "1fa27": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@1fa27",
+      "displayName": "",
+      "id": "1fa27",
+      "name": "mutong_Part_9.mesh",
+      "userData": {
+        "gltfIndex": 8,
+        "triangleCount": 416
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d7bb9": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@d7bb9",
+      "displayName": "",
+      "id": "d7bb9",
+      "name": "mutong_Part_10.mesh",
+      "userData": {
+        "gltfIndex": 9,
+        "triangleCount": 298
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f04a0": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@f04a0",
+      "displayName": "",
+      "id": "f04a0",
+      "name": "mutong_Part_11.mesh",
+      "userData": {
+        "gltfIndex": 10,
+        "triangleCount": 338
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "d1027": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@d1027",
+      "displayName": "",
+      "id": "d1027",
+      "name": "mutong_Part_13.mesh",
+      "userData": {
+        "gltfIndex": 12,
+        "triangleCount": 316
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "58af9": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@58af9",
+      "displayName": "",
+      "id": "58af9",
+      "name": "mutong_Part_14.mesh",
+      "userData": {
+        "gltfIndex": 13,
+        "triangleCount": 312
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "f1b89": {
+      "importer": "gltf-mesh",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@f1b89",
+      "displayName": "",
+      "id": "f1b89",
+      "name": "mutong_Part_15.mesh",
+      "userData": {
+        "gltfIndex": 14,
+        "triangleCount": 282
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "73b7f": {
+      "importer": "gltf-animation",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@73b7f",
+      "displayName": "",
+      "id": "73b7f",
+      "name": "Take 001.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 1.3333333730697632
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "a96a6": {
+      "importer": "texture",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@a96a6",
+      "displayName": "",
+      "id": "a96a6",
+      "name": "贴图 #1.texture",
+      "userData": {
+        "wrapModeS": "repeat",
+        "wrapModeT": "repeat",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "anisotropy": 0,
+        "isUuid": false,
+        "imageUuidOrDatabaseUri": "db://assets/art/salvage3d/incoming/02_小残骸/mutong_d.jpg"
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "9d093": {
+      "importer": "gltf-material",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@9d093",
+      "displayName": "",
+      "id": "9d093",
+      "name": "Material #25.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "5edba": {
+      "importer": "gltf-scene",
+      "uuid": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@5edba",
+      "displayName": "",
+      "id": "5edba",
+      "name": "横躺木桶.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [
+      {
+        "name": "贴图 #1",
+        "uri": "db://assets/art/salvage3d/incoming/02_小残骸/mutong_d.jpg"
+      }
+    ],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 1.3333333730697632,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "Take 001",
+            "from": 0,
+            "to": 1.3333333730697632,
+            "wrapMode": 2,
+            "previousId": "73b7f"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@cd41e",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@98c70",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@437a5",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@bfda5",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@8875b",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@5e39b",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@95e0c",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@06359",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@1fa27",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@d7bb9",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@f04a0",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@49636",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@d1027",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@58af9",
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@f1b89"
+      ],
+      "skeletons": [],
+      "textures": [
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@a96a6"
+      ],
+      "materials": [
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@9d093"
+      ],
+      "scenes": [
+        "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@5edba"
+      ]
+    }
+  }
+}

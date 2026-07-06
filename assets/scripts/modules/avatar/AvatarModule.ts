@@ -1,4 +1,4 @@
-import { Color, EventTouch, Node, UITransform } from 'cc';
+import { Color, EventTouch, Node, Prefab, UITransform, instantiate } from 'cc';
 import { DESIGN_HEIGHT, DESIGN_WIDTH } from '../../common/Layout';
 import { createNode } from '../../common/PlaceholderFactory';
 import { createBox3D } from '../../common3d/Placeholder3D';
@@ -25,6 +25,7 @@ export class AvatarModule implements PlayableModule {
         private readonly avatar: AvatarSim,
         private readonly goal: GoalChainSim,
         private readonly capacity: number,
+        private readonly avatarPrefab: Prefab | null,
     ) {}
 
     public start(context: ModuleContext): void {
@@ -32,8 +33,15 @@ export class AvatarModule implements PlayableModule {
 
         const root = new Node('Avatar');
         context.world.addChild(root);
-        createBox3D('Body', root, 0, 0.45, 0, 0.5, 0.9, 0.42, BODY);
-        createBox3D('Head', root, 0, 1.12, 0, 0.34, 0.34, 0.34, HEAD);
+        if (this.avatarPrefab) {
+            const model = instantiate(this.avatarPrefab);
+            model.name = 'AvatarModel';
+            model.setRotationFromEuler(0, 180, 0);
+            root.addChild(model);
+        } else {
+            createBox3D('Body', root, 0, 0.45, 0, 0.5, 0.9, 0.42, BODY);
+            createBox3D('Head', root, 0, 1.12, 0, 0.34, 0.34, 0.34, HEAD);
+        }
         this.carryStack = [];
         for (let i = 0; i < this.capacity; i += 1) {
             const bar = createBox3D(`Carry${i}`, root, 0, 1.45 + i * 0.2, 0, 0.42, 0.14, 0.3, CARRY);

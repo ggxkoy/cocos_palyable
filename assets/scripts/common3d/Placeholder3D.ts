@@ -5,7 +5,7 @@ import { Color, Material, MeshRenderer, Node, primitives, utils } from 'cc';
 // 换掉对应节点即可，节点命名与策划案资产清单一致。
 export function makeBoxMaterial(color: Color): Material {
     const material = new Material();
-    material.initialize({ effectName: 'builtin-standard' });
+    material.initialize({ effectName: 'builtin-unlit' });
     material.setProperty('mainColor', color);
     return material;
 }

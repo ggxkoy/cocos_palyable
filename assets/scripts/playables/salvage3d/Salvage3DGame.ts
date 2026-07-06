@@ -1,4 +1,4 @@
-import { _decorator, Camera, Component, Node, director } from 'cc';
+import { _decorator, Camera, Component, Node, Prefab, director } from 'cc';
 import { installAdEventListeners } from '../../common/PlayableSdk';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { AvatarModule } from '../../modules/avatar/AvatarModule';
@@ -14,12 +14,18 @@ import { WorkerCrewModule } from '../../modules/workers/WorkerCrewModule';
 import { SALVAGE3D_CONFIG } from './Salvage3DConfig';
 import { createSalvageSim } from './SalvageSim';
 
-const { ccclass } = _decorator;
+const { ccclass, property } = _decorator;
 
 // 3D 模块化拼装示例：一份配置（Salvage3DConfig）+ 一张模块清单。
 // 拼接新 playable 时替换配置与清单即可，模块本体不改。
 @ccclass('Salvage3DGame')
 export class Salvage3DGame extends Component {
+    @property(Prefab)
+    private playerPrefab: Prefab | null = null;
+
+    @property(Prefab)
+    private turretPrefab: Prefab | null = null;
+
     private readonly sim = createSalvageSim(SALVAGE3D_CONFIG);
     private modules: PlayableModule[] = [];
     private elapsed = 0;
@@ -50,9 +56,9 @@ export class Salvage3DGame extends Component {
             }, this.sim.harvest),
             new HarvestModule(this.sim.harvest, config.veinStock),
             new GoalChainModule(this.sim.goal, this.sim.economy, config.world.vault),
-            new DefenseModule(this.sim.defense, config.world.turrets),
+            new DefenseModule(this.sim.defense, config.world.turrets, this.turretPrefab),
             new WorkerCrewModule(this.sim.workers, config.capacity),
-            new AvatarModule(this.sim.avatar, this.sim.goal, config.capacity),
+            new AvatarModule(this.sim.avatar, this.sim.goal, config.capacity, this.playerPrefab),
             new GuideModule(this.sim.goal, this.sim.avatar, this.sim.harvest, config.world.depot, config.capacity),
             new HudModule(config.texts, this.sim.economy, this.sim.goal, config.defense.ammoCap),
             new EndCardModule(config.texts, config.ctaUrl),

@@ -1,0 +1,99 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "d70406bb-8d48-4ba2-bc4e-8729a6011ce1",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "d2d2a": {
+      "importer": "gltf-animation",
+      "uuid": "d70406bb-8d48-4ba2-bc4e-8729a6011ce1@d2d2a",
+      "displayName": "",
+      "id": "d2d2a",
+      "name": "dizzy.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 1.7999999523162842
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "cdf7c": {
+      "importer": "gltf-scene",
+      "uuid": "d70406bb-8d48-4ba2-bc4e-8729a6011ce1@cdf7c",
+      "displayName": "",
+      "id": "cdf7c",
+      "name": "Monster2@dizzy.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 1.7999999523162842,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "dizzy",
+            "from": 0,
+            "to": 1.7999999523162842,
+            "wrapMode": 2,
+            "previousId": "d2d2a"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [],
+      "skeletons": [],
+      "textures": [],
+      "materials": [],
+      "scenes": [
+        "d70406bb-8d48-4ba2-bc4e-8729a6011ce1@cdf7c"
+      ]
+    }
+  }
+}

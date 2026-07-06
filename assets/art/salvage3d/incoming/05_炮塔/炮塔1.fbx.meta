@@ -1,0 +1,194 @@
+{
+  "ver": "2.3.13",
+  "importer": "fbx",
+  "imported": true,
+  "uuid": "8a063811-df0b-40a4-aecf-849cda18e696",
+  "files": [
+    "__original-animation-0.cconb"
+  ],
+  "subMetas": {
+    "7202e": {
+      "importer": "gltf-mesh",
+      "uuid": "8a063811-df0b-40a4-aecf-849cda18e696@7202e",
+      "displayName": "",
+      "id": "7202e",
+      "name": "dizuo01.mesh",
+      "userData": {
+        "gltfIndex": 0,
+        "triangleCount": 830
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "3db48": {
+      "importer": "gltf-mesh",
+      "uuid": "8a063811-df0b-40a4-aecf-849cda18e696@3db48",
+      "displayName": "",
+      "id": "3db48",
+      "name": "pao01_zhijia.mesh",
+      "userData": {
+        "gltfIndex": 1,
+        "triangleCount": 68
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "c3165": {
+      "importer": "gltf-mesh",
+      "uuid": "8a063811-df0b-40a4-aecf-849cda18e696@c3165",
+      "displayName": "",
+      "id": "c3165",
+      "name": "paoshen.mesh",
+      "userData": {
+        "gltfIndex": 2,
+        "triangleCount": 602
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "5cfa1": {
+      "importer": "gltf-mesh",
+      "uuid": "8a063811-df0b-40a4-aecf-849cda18e696@5cfa1",
+      "displayName": "",
+      "id": "5cfa1",
+      "name": "paoguan.mesh",
+      "userData": {
+        "gltfIndex": 3,
+        "triangleCount": 72
+      },
+      "ver": "1.1.1",
+      "imported": true,
+      "files": [
+        ".bin",
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "73b7f": {
+      "importer": "gltf-animation",
+      "uuid": "8a063811-df0b-40a4-aecf-849cda18e696@73b7f",
+      "displayName": "",
+      "id": "73b7f",
+      "name": "Take 001.animation",
+      "userData": {
+        "gltfIndex": 0,
+        "wrapMode": 2,
+        "sample": 30,
+        "span": {
+          "from": 0,
+          "to": 0.1666666716337204
+        },
+        "events": []
+      },
+      "ver": "1.0.17",
+      "imported": true,
+      "files": [
+        ".cconb"
+      ],
+      "subMetas": {}
+    },
+    "d90a4": {
+      "importer": "gltf-material",
+      "uuid": "8a063811-df0b-40a4-aecf-849cda18e696@d90a4",
+      "displayName": "",
+      "id": "d90a4",
+      "name": "01 - Default.material",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    },
+    "da893": {
+      "importer": "gltf-scene",
+      "uuid": "8a063811-df0b-40a4-aecf-849cda18e696@da893",
+      "displayName": "",
+      "id": "da893",
+      "name": "炮塔1.prefab",
+      "userData": {
+        "gltfIndex": 0
+      },
+      "ver": "1.0.14",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
+    }
+  },
+  "userData": {
+    "imageMetas": [],
+    "fbx": {
+      "smartMaterialEnabled": true
+    },
+    "animationImportSettings": [
+      {
+        "name": "Take 001",
+        "duration": 0.1666666716337204,
+        "fps": 30,
+        "splits": [
+          {
+            "name": "Take 001",
+            "from": 0,
+            "to": 0.1666666716337204,
+            "wrapMode": 2,
+            "previousId": "73b7f"
+          }
+        ]
+      }
+    ],
+    "lods": {
+      "enable": false,
+      "hasBuiltinLOD": false,
+      "options": [
+        {
+          "screenRatio": 0.25,
+          "faceCount": 1
+        },
+        {
+          "screenRatio": 0.125,
+          "faceCount": 0.25
+        },
+        {
+          "screenRatio": 0.01,
+          "faceCount": 0.1
+        }
+      ]
+    },
+    "assetFinder": {
+      "meshes": [
+        "8a063811-df0b-40a4-aecf-849cda18e696@7202e",
+        "8a063811-df0b-40a4-aecf-849cda18e696@3db48",
+        "8a063811-df0b-40a4-aecf-849cda18e696@c3165",
+        "8a063811-df0b-40a4-aecf-849cda18e696@5cfa1"
+      ],
+      "skeletons": [],
+      "textures": [],
+      "materials": [
+        "8a063811-df0b-40a4-aecf-849cda18e696@d90a4"
+      ],
+      "scenes": [
+        "8a063811-df0b-40a4-aecf-849cda18e696@da893"
+      ]
+    }
+  }
+}

@@ -144,9 +144,14 @@ declare module 'cc' {
 
   export class SpriteFrame {
     public texture: Texture2D;
+    public packable: boolean;
   }
 
   export class Mesh {}
+
+  export class Prefab {}
+
+  export function instantiate(prefab: Prefab): Node;
 
   export namespace primitives {
     export interface IGeometry {
