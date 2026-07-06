@@ -61,10 +61,15 @@ export const SALVAGE3D_CONFIG = {
     actionRange: 0.9,
     detectRange: 8,
     goldPerBar: 5,
-    boomDuration: 3.4,
+    // 演出时长要覆盖：小兵 24 发 + BOSS 12 发 ≈ 4.3s 射击。
+    boomDuration: 5.4,
     defense: {
         enemyCount: 24,
         enemySpeed: 2.2,
+        // 对标案规则：BOSS 数量少、血厚、移动慢，炮塔优先攻击 BOSS。
+        bossCount: 1,
+        bossHp: 12,
+        bossSpeed: 1.1,
         fireInterval: 0.12,
         ammoPerBar: 2,
         ammoCap: 80,

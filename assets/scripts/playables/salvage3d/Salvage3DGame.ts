@@ -44,6 +44,12 @@ export class Salvage3DGame extends Component {
     @property(Prefab)
     private enemyPrefab: Prefab | null = null;
 
+    @property(Prefab)
+    private bossPrefab: Prefab | null = null;
+
+    @property(Prefab)
+    private turretSoldierPrefab: Prefab | null = null;
+
     @property(Material)
     private groundMaterial: Material | null = null;
 
@@ -77,7 +83,7 @@ export class Salvage3DGame extends Component {
             }, this.sim.harvest, this.depotPrefab, this.groundMaterial),
             new HarvestModule(this.sim.harvest, config.veinStock, this.wreckPrefab),
             new GoalChainModule(this.sim.goal, this.sim.economy, config.world.vault, this.planePrefab),
-            new DefenseModule(this.sim.defense, config.world.turrets, this.turretPrefab, this.enemyPrefab),
+            new DefenseModule(this.sim.defense, config.world.turrets, this.turretPrefab, this.enemyPrefab, this.turretSoldierPrefab, this.bossPrefab),
             new WorkerCrewModule(this.sim.workers, config.capacity, this.workerPrefab),
             new AvatarModule(this.sim.avatar, config.capacity, this.playerPrefab),
             new GuideModule(this.sim.goal, this.sim.avatar, this.sim.harvest, config.world.depot, config.capacity),
