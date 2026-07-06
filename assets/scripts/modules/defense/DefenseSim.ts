@@ -67,6 +67,9 @@ export class DefenseSim {
     private nextId = 1;
     private nextBulletId = 1;
     private spawnCursor = 0;
+    private finaleStarted = false;
+    private clearedEmitted = false;
+    private progress: (() => number) | null = null;
 
     constructor(
         private readonly config: DefenseConfig,
@@ -74,26 +77,22 @@ export class DefenseSim {
         private readonly bus: EventBus,
     ) {
         bus.on('goal:vault', () => {
-            // 终局：渗透波停止，敌潮+BOSS 总攻。
+            // 终局：渗透波停止，敌潮+BOSS 总攻。演出没有时长——清场才结束。
             this.trickleActive = false;
+            this.finaleStarted = true;
             this.spawnFinalHorde();
-        });
-        // 结算瞬间防线齐射清场：残余敌人全部进入死亡表现（不掉落，避免结算时刷金币）。
-        bus.on('goal:end', () => {
-            for (const enemy of this.enemies) {
-                if (enemy.state === 'alive') {
-                    enemy.hp = 0;
-                    enemy.hitCount += 1;
-                    enemy.state = 'dying';
-                    enemy.stateTimer = this.config.deathTime;
-                    this.bus.emit('fx:hit', { enemyId: enemy.id, x: enemy.x, z: enemy.z, died: true });
-                }
-            }
-            this.bullets.length = 0;
         });
     }
 
+    // 玩家进度探针（已购买数）：进度越深渗透波越密——压力随行为增长，不随时间。
+    public attachProgress(probe: () => number): void {
+        this.progress = probe;
+    }
+
     public startTrickle(): void {
+        if (this.finaleStarted) {
+            return;
+        }
         this.trickleActive = true;
         this.trickleTimer = 0.8;
     }
@@ -139,7 +138,9 @@ export class DefenseSim {
         if (this.trickleActive) {
             this.trickleTimer -= deltaTime;
             if (this.trickleTimer <= 0) {
-                this.trickleTimer = this.config.trickleInterval;
+                // 压力随玩家进度加密（已购买数越多波次越紧），不是秒表脚本。
+                const progress = this.progress?.() ?? 0;
+                this.trickleTimer = this.config.trickleInterval / (1 + 0.3 * progress);
                 for (let i = 0; i < this.config.trickleCount; i += 1) {
                     this.spawnGrunt();
                 }
@@ -177,6 +178,14 @@ export class DefenseSim {
             }
             bullet.x += (dx / distance) * step;
             bullet.z += (dz / distance) * step;
+        }
+
+        if (this.finaleStarted && !this.clearedEmitted) {
+            const anyAlive = this.enemies.some(enemy => enemy.state === 'alive');
+            if (!anyAlive && this.bullets.length === 0) {
+                this.clearedEmitted = true;
+                this.bus.emit('defense:cleared');
+            }
         }
 
         this.fireTimer -= deltaTime;

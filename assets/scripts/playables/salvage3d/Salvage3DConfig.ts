@@ -86,8 +86,6 @@ export const SALVAGE3D_CONFIG = {
         ranged: 'talk',
         deposit: 'idle2',
     } as Record<string, string>,
-    // 演出时长覆盖终局射击预算：18 小兵 x2 血 + BOSS 12 血 = 48 发 + 弹道飞行。
-    boomDuration: 7.0,
     defense: {
         enemyCount: 18,
         enemySpeed: 2.2,

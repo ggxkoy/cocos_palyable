@@ -93,19 +93,24 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
         padRadius: config.padRadius,
         vaultRadius: config.vaultRadius,
         dwellTime: config.dwellTime,
-        boomDuration: config.boomDuration,
     }, economy, bus);
     // 踩牌购买：目标链盯着主角的位置。
     goal.attachPresence(() => ({ x: avatar.x, z: avatar.z }));
 
-    // 模块接线：目标链购买驱动世界变化；敌人倒地掉金币。
-    bus.on('goal:hire', () => {
-        if (workers.workers.length === 0) {
+    // 模块接线：目标链购买驱动世界变化；敌人倒地掉金币；
+    // 终局演出没有时长——敌潮清场事件驱动结算（非线性原则）。
+    let trickleStarted = false;
+    bus.on('goal:purchased', () => {
+        // 首次购买开启渗透波；若首购就是打捞大飞机（极端非线性路线），直接进终局不开波。
+        if (!trickleStarted && !goal.vaultOpened) {
+            trickleStarted = true;
             defense.startTrickle();
         }
-        workers.hire();
     });
+    defense.attachProgress(() => goal.purchases.filter(p => p.purchased).length);
+    bus.on('goal:hire', () => workers.hire());
     bus.on('goal:unlock', () => harvest.unlockNextZone());
+    bus.on('defense:cleared', () => goal.finish());
     bus.on('enemy:down', payload => {
         const down = payload as { x: number; z: number };
         pickups.spawn('gold', down.x, down.z);
