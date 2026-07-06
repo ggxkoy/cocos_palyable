@@ -85,7 +85,7 @@ export class Salvage3DGame extends Component {
             new HarvestModule(this.sim.harvest, config.veinStock, this.wreckPrefab),
             new PickupModule(this.sim.pickups),
             new GoalChainModule(this.sim.goal, this.sim.economy, config.world.vault, this.planePrefab),
-            new DefenseModule(this.sim.defense, config.world.turrets, this.turretPrefab, this.enemyPrefab, this.turretSoldierPrefab, this.bossPrefab),
+            new DefenseModule(this.sim.defense, config.world.turrets, config.defense.deathTime, config.defense.enemyAnimClips, this.turretPrefab, this.enemyPrefab, this.turretSoldierPrefab, this.bossPrefab),
             new WorkerCrewModule(this.sim.workers, config.capacity, this.workerPrefab),
             new AvatarModule(this.sim.avatar, this.playerPrefab, config.animClips),
             new GuideModule(this.sim.goal, this.sim.avatar, this.sim.harvest, config.world.depot, config.capacity),

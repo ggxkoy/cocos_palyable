@@ -3,19 +3,22 @@ import { EconomySim } from '../economy/EconomySim';
 import { EnemyContact } from '../avatar/AvatarSim';
 
 // 敌潮防御模块（纯逻辑）：
-// - 渗透波：首次雇佣后，小股丧尸持续从南侧涌向防线（中期压力，对标视频 0:09 起）；
-// - 终局潮：打捞大飞机触发大规模敌潮 + BOSS（数量少、血厚、移动慢）；
-// - 炮塔按射速点名（优先 BOSS，其次离防线最近），【每发消耗弹药，没弹药就停火】——
-//   弹药见底、敌人压线就是参考片里的危机感；
-// - 敌人死亡向后倒地掉金币（bus 'enemy:down'，由拼装层接到掉落物模块）。
+// - 渗透波（首次雇佣后开启）+ 终局敌潮与 BOSS（打捞大飞机触发）；
+// - 炮塔发射【实体子弹】：追踪飞行、命中才结算伤害（fx:hit 三重反馈由视觉层做）；
+//   每发消耗弹药，没弹药停火；优先攻击 BOSS，其次离防线最近的小兵；
+// - 敌人状态机 alive → dying → gone：受击出血条，血量归零播死亡（变灰渐隐），
+//   死亡瞬间掉金币（bus 'enemy:down'）。
 export interface DefenseConfig {
     readonly turrets: ReadonlyArray<{ readonly x: number; readonly z: number }>;
     readonly enemyCount: number;
     readonly enemySpeed: number;
+    readonly gruntHp: number;
     readonly bossCount: number;
     readonly bossHp: number;
     readonly bossSpeed: number;
     readonly fireInterval: number;
+    readonly bulletSpeed: number;
+    readonly deathTime: number;
     readonly spawnZ: number;
     readonly lineZ: number;
     readonly fieldHalfWidth: number;
@@ -25,30 +28,44 @@ export interface DefenseConfig {
 
 export type DefenseEnemyKind = 'grunt' | 'boss';
 
+export type DefenseEnemyState = 'alive' | 'dying' | 'gone';
+
 export interface DefenseEnemy {
     readonly id: number;
     readonly kind: DefenseEnemyKind;
+    readonly maxHp: number;
     x: number;
     z: number;
     hp: number;
-    alive: boolean;
+    state: DefenseEnemyState;
+    stateTimer: number;
+    hitCount: number;
 }
 
-export interface DefenseFire {
-    readonly fromX: number;
-    readonly fromZ: number;
-    readonly toX: number;
-    readonly toZ: number;
+export interface DefenseBullet {
+    readonly id: number;
+    readonly targetId: number;
+    x: number;
+    z: number;
+}
+
+export interface HitEvent {
+    readonly enemyId: number;
+    readonly x: number;
+    readonly z: number;
+    readonly died: boolean;
 }
 
 export class DefenseSim {
     public readonly enemies: DefenseEnemy[] = [];
+    public readonly bullets: DefenseBullet[] = [];
     public trickleActive = false;
 
     private fireTimer = 0;
     private trickleTimer = 0;
     private turretIndex = 0;
     private nextId = 1;
+    private nextBulletId = 1;
     private spawnCursor = 0;
 
     constructor(
@@ -56,21 +73,37 @@ export class DefenseSim {
         private readonly economy: EconomySim,
         private readonly bus: EventBus,
     ) {
-        bus.on('goal:vault', () => this.spawnFinalHorde());
+        bus.on('goal:vault', () => {
+            // 终局：渗透波停止，敌潮+BOSS 总攻。
+            this.trickleActive = false;
+            this.spawnFinalHorde();
+        });
+        // 结算瞬间防线齐射清场：残余敌人全部进入死亡表现（不掉落，避免结算时刷金币）。
+        bus.on('goal:end', () => {
+            for (const enemy of this.enemies) {
+                if (enemy.state === 'alive') {
+                    enemy.hp = 0;
+                    enemy.hitCount += 1;
+                    enemy.state = 'dying';
+                    enemy.stateTimer = this.config.deathTime;
+                    this.bus.emit('fx:hit', { enemyId: enemy.id, x: enemy.x, z: enemy.z, died: true });
+                }
+            }
+            this.bullets.length = 0;
+        });
     }
 
-    // 首次雇佣后开启渗透波（拼装层接线）。
     public startTrickle(): void {
         this.trickleActive = true;
         this.trickleTimer = 0.8;
     }
 
-    // 主角战斗用的感知查询。
+    // 主角战斗用的感知查询（只认活着的）。
     public nearestAlive(x: number, z: number, range: number): EnemyContact | null {
         let best: DefenseEnemy | null = null;
         let bestDistance = range;
         for (const enemy of this.enemies) {
-            if (!enemy.alive) {
+            if (enemy.state !== 'alive') {
                 continue;
             }
             const distance = Math.hypot(enemy.x - x, enemy.z - z);
@@ -82,17 +115,24 @@ export class DefenseSim {
         return best ? { id: best.id, x: best.x, z: best.z } : null;
     }
 
+    // 统一的伤害入口（炮塔子弹命中 / 主角近战远程都走这里），
+    // 视觉层监听 fx:hit 做三重反馈：受击动画、命中特效、闪白。
     public damage(enemyId: number, amount: number): boolean {
         const enemy = this.enemies.find(item => item.id === enemyId);
-        if (!enemy || !enemy.alive) {
+        if (!enemy || enemy.state !== 'alive') {
             return false;
         }
         enemy.hp -= amount;
-        if (enemy.hp <= 0) {
-            this.kill(enemy);
-            return true;
+        enemy.hitCount += 1;
+        const died = enemy.hp <= 0;
+        if (died) {
+            enemy.state = 'dying';
+            enemy.stateTimer = this.config.deathTime;
+            this.bus.emit('enemy:down', { x: enemy.x, z: enemy.z, kind: enemy.kind });
         }
-        return false;
+        const hit: HitEvent = { enemyId: enemy.id, x: enemy.x, z: enemy.z, died };
+        this.bus.emit('fx:hit', hit);
+        return died;
     }
 
     public tick(deltaTime: number): void {
@@ -107,10 +147,36 @@ export class DefenseSim {
         }
 
         for (const enemy of this.enemies) {
-            if (enemy.alive) {
+            if (enemy.state === 'alive') {
                 const speed = enemy.kind === 'boss' ? this.config.bossSpeed : this.config.enemySpeed;
                 enemy.z = Math.max(this.config.lineZ, enemy.z - speed * deltaTime);
+            } else if (enemy.state === 'dying') {
+                enemy.stateTimer -= deltaTime;
+                if (enemy.stateTimer <= 0) {
+                    enemy.state = 'gone';
+                }
             }
+        }
+
+        // 子弹追踪飞行：命中才结算伤害；目标没了就哑火消散。
+        for (let i = this.bullets.length - 1; i >= 0; i -= 1) {
+            const bullet = this.bullets[i];
+            const target = this.enemies.find(item => item.id === bullet.targetId);
+            if (!target || target.state !== 'alive') {
+                this.bullets.splice(i, 1);
+                continue;
+            }
+            const dx = target.x - bullet.x;
+            const dz = target.z - bullet.z;
+            const distance = Math.hypot(dx, dz);
+            const step = this.config.bulletSpeed * deltaTime;
+            if (distance <= Math.max(0.28, step)) {
+                this.bullets.splice(i, 1);
+                this.damage(target.id, 1);
+                continue;
+            }
+            bullet.x += (dx / distance) * step;
+            bullet.z += (dz / distance) * step;
         }
 
         this.fireTimer -= deltaTime;
@@ -128,12 +194,10 @@ export class DefenseSim {
             const turret = this.config.turrets[this.turretIndex % this.config.turrets.length];
             this.turretIndex += 1;
             this.economy.consumeAmmo(1);
-            target.hp -= 1;
-            if (target.hp <= 0) {
-                this.kill(target);
-            }
-            const fire: DefenseFire = { fromX: turret.x, fromZ: turret.z, toX: target.x, toZ: target.z };
-            this.bus.emit('fx:fire', fire);
+            this.bullets.push({ id: this.nextBulletId, targetId: target.id, x: turret.x, z: turret.z });
+            this.nextBulletId += 1;
+            // 枪口反馈（视觉层做火光/后座）。
+            this.bus.emit('fx:fire', { fromX: turret.x, fromZ: turret.z, toX: target.x, toZ: target.z });
             this.fireTimer += this.config.fireInterval;
         }
     }
@@ -143,7 +207,7 @@ export class DefenseSim {
         let boss: DefenseEnemy | null = null;
         let grunt: DefenseEnemy | null = null;
         for (const enemy of this.enemies) {
-            if (!enemy.alive) {
+            if (enemy.state !== 'alive') {
                 continue;
             }
             if (enemy.kind === 'boss') {
@@ -157,21 +221,19 @@ export class DefenseSim {
         return boss ?? grunt;
     }
 
-    private kill(enemy: DefenseEnemy): void {
-        enemy.alive = false;
-        this.bus.emit('enemy:down', { x: enemy.x, z: enemy.z, kind: enemy.kind });
-    }
-
     private spawnGrunt(): void {
         const width = this.config.fieldHalfWidth * 2;
         this.spawnCursor += 1;
         this.enemies.push({
             id: this.nextId,
             kind: 'grunt',
+            maxHp: this.config.gruntHp,
             x: -this.config.fieldHalfWidth + ((this.spawnCursor * 1.37) % width),
             z: this.config.spawnZ + (this.spawnCursor % 3) * 0.6,
-            hp: 1,
-            alive: true,
+            hp: this.config.gruntHp,
+            state: 'alive',
+            stateTimer: 0,
+            hitCount: 0,
         });
         this.nextId += 1;
     }
@@ -184,10 +246,13 @@ export class DefenseSim {
             this.enemies.push({
                 id: this.nextId,
                 kind: 'boss',
+                maxHp: this.config.bossHp,
                 x: (i - (this.config.bossCount - 1) / 2) * 2.4,
                 z: this.config.spawnZ + 1.8,
                 hp: this.config.bossHp,
-                alive: true,
+                state: 'alive',
+                stateTimer: 0,
+                hitCount: 0,
             });
             this.nextId += 1;
         }

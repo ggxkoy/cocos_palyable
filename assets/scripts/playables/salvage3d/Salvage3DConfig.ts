@@ -86,15 +86,24 @@ export const SALVAGE3D_CONFIG = {
         ranged: 'talk',
         deposit: 'idle2',
     } as Record<string, string>,
-    boomDuration: 5.4,
+    // 演出时长覆盖终局射击预算：18 小兵 x2 血 + BOSS 12 血 = 48 发 + 弹道飞行。
+    boomDuration: 7.0,
     defense: {
-        enemyCount: 24,
+        enemyCount: 18,
         enemySpeed: 2.2,
+        // 小兵 2 血：受击出血条、第二发才倒，打击感三重反馈有展示窗口。
+        gruntHp: 2,
         // 对标案规则：BOSS 数量少、血厚、移动慢，炮塔优先攻击 BOSS。
         bossCount: 1,
         bossHp: 12,
         bossSpeed: 1.1,
         fireInterval: 0.12,
+        // 实体子弹：追踪飞行，命中才结算伤害与三重反馈。
+        bulletSpeed: 14,
+        // 死亡表现时长：死亡动画→变灰→下沉缩小渐隐。
+        deathTime: 1.1,
+        // 敌人动画剪辑名映射（06_敌军/08_boss 的 FBX 剪辑，按导入结果调整）。
+        enemyAnimClips: { move: 'walk', hit: 'hit', death: 'death' } as Record<string, string>,
         // 渗透波：首次雇佣后小股丧尸持续压线（中期压力）。
         trickleInterval: 6.5,
         trickleCount: 2,
