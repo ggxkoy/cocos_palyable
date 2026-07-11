@@ -1,24 +1,25 @@
 import { Action, BtNode, BtStatus, Condition, Repeat, Selector, Sequence } from '../../common/BehaviorTree';
 import { EventBus } from '../../framework/EventBus';
 import { EconomySim } from '../economy/EconomySim';
-import { HarvestSim, HarvestVein } from '../harvest/HarvestSim';
 import { PickupSim } from '../pickups/PickupSim';
+import { JobProvider } from '../work/JobProvider';
 
-// 雇员模块（纯逻辑）：玩家购买获得的自动化。感知式行为树大脑：
-// 满载回投 → 范围索敌并自动开采 → 有货无目标先回投 → 向矿区集结。
+// 雇员模块（纯逻辑）：玩家购买获得的自动化。行为树大脑对接通用作业接口
+// （打捞绳/矿脉都可以）：满载回投 → 找活干（接近→持续作业）→
+// 有货无活先回投 → 向作业区集结。金币掉落顺路也捡（直接入账）。
 export interface WorkerCrewConfig {
     readonly spawn: { readonly x: number; readonly z: number };
     readonly depot: { readonly x: number; readonly z: number };
+    readonly rally: { readonly x: number; readonly z: number };
     readonly speed: number;
     readonly capacity: number;
-    readonly strikeInterval: number;
     readonly depositTime: number;
-    readonly actionRange: number;
+    readonly workSearchRange: number;
     readonly detectRange: number;
     readonly pickupRange: number;
 }
 
-export type CrewWorkerTask = 'rally' | 'approach' | 'strike' | 'toDepot' | 'deposit';
+export type CrewWorkerTask = 'rally' | 'approach' | 'work' | 'toDepot' | 'deposit';
 
 export interface CrewWorker {
     readonly id: number;
@@ -27,7 +28,7 @@ export interface CrewWorker {
     readonly carried: string[];
     task: CrewWorkerTask;
     actionTimer: number;
-    targetVeinId: number | null;
+    jobId: number | null;
 }
 
 interface WorkerContext {
@@ -42,7 +43,7 @@ export class WorkerCrewSim {
 
     constructor(
         private readonly config: WorkerCrewConfig,
-        private readonly harvest: HarvestSim,
+        private readonly job: JobProvider,
         private readonly pickups: PickupSim,
         private readonly economy: EconomySim,
         private readonly bus: EventBus,
@@ -56,7 +57,7 @@ export class WorkerCrewSim {
             carried: [],
             task: 'rally',
             actionTimer: 0,
-            targetVeinId: null,
+            jobId: null,
         };
         this.nextId += 1;
         this.workers.push(worker);
@@ -66,10 +67,14 @@ export class WorkerCrewSim {
 
     public tick(deltaTime: number): void {
         for (const worker of this.workers) {
-            // 与主角同款的范围自动拾取：掉落物走近即背上。
-            if (worker.carried.length < this.config.capacity) {
-                const pickup = this.pickups.nearestAlive(worker.x, worker.z, this.config.pickupRange);
-                if (pickup) {
+            // 范围自动拾取：金币直接入账，废料背上。
+            const pickup = this.pickups.nearestAlive(worker.x, worker.z, this.config.pickupRange);
+            if (pickup) {
+                if (pickup.kind === 'gold') {
+                    this.pickups.collect(pickup);
+                    const value = this.economy.collectCoin();
+                    this.bus.emit('fx:coin', { x: pickup.x, z: pickup.z, value });
+                } else if (worker.carried.length < this.config.capacity) {
                     worker.carried.push(this.pickups.collect(pickup));
                 }
             }
@@ -88,7 +93,7 @@ export class WorkerCrewSim {
             new Sequence<WorkerContext>([
                 new Action(context => this.acquire(context.worker)),
                 new Action((context, dt) => this.approach(context.worker, dt)),
-                new Action((context, dt) => this.strike(context.worker, dt)),
+                new Action((context, dt) => this.workOn(context.worker, dt)),
             ]),
             new Sequence<WorkerContext>([
                 new Condition(context => context.worker.carried.length > 0),
@@ -99,52 +104,49 @@ export class WorkerCrewSim {
         ]));
     }
 
+    private unitKey(worker: CrewWorker): string {
+        return `worker-${worker.id}`;
+    }
+
     private acquire(worker: CrewWorker): BtStatus {
-        const vein = this.harvest.nearestStocked(worker.x, worker.z, this.config.detectRange);
-        if (!vein) {
-            worker.targetVeinId = null;
+        const job = this.job.nearestJob(worker.x, worker.z, this.config.detectRange);
+        if (!job) {
+            worker.jobId = null;
             return BtStatus.Failure;
         }
-        worker.targetVeinId = vein.id;
+        worker.jobId = job.id;
         return BtStatus.Success;
     }
 
     private approach(worker: CrewWorker, deltaTime: number): BtStatus {
-        const vein = this.targetOf(worker);
-        if (!vein || vein.stock <= 0) {
+        if (worker.jobId === null) {
             return BtStatus.Failure;
         }
-        worker.task = 'approach';
-        if (Math.hypot(vein.x - worker.x, vein.z - worker.z) <= this.config.actionRange) {
+        if (this.job.canWork(this.unitKey(worker), worker.jobId, worker.x, worker.z)) {
             return BtStatus.Success;
         }
-        this.moveToward(worker, vein.x, vein.z, deltaTime);
+        worker.task = 'approach';
+        const job = this.job.nearestJob(worker.x, worker.z, this.config.detectRange);
+        if (!job || job.id !== worker.jobId) {
+            // 目标丢失（被抢/消失），重新找活。
+            worker.jobId = null;
+            return BtStatus.Failure;
+        }
+        this.moveToward(worker, job.x, job.z, deltaTime);
         return BtStatus.Running;
     }
 
-    private strike(worker: CrewWorker, deltaTime: number): BtStatus {
-        const vein = this.targetOf(worker);
-        if (!vein || vein.stock <= 0) {
-            worker.actionTimer = 0;
-            return BtStatus.Success;
+    private workOn(worker: CrewWorker, deltaTime: number): BtStatus {
+        if (worker.jobId === null) {
+            return BtStatus.Failure;
         }
-        worker.task = 'strike';
-        worker.actionTimer += deltaTime;
-        while (worker.actionTimer >= this.config.strikeInterval && vein.stock > 0 && worker.carried.length < this.config.capacity) {
-            worker.actionTimer -= this.config.strikeInterval;
-            const kind = this.harvest.hit(vein);
-            if (kind) {
-                // 敲落的资源散在残骸旁，由自动拾取捡起（与主角同一套表现）。
-                const spread = ((vein.stock * 41) % 100) / 100 - 0.5;
-                this.bus.emit('fx:strike', { x: vein.x, z: vein.z });
-                this.pickups.spawn(kind, vein.x + spread, vein.z + 0.5);
-            }
+        worker.task = 'work';
+        const result = this.job.work(this.unitKey(worker), worker.jobId, worker.x, worker.z, deltaTime);
+        if (result === 'working') {
+            return BtStatus.Running;
         }
-        if (worker.carried.length >= this.config.capacity || vein.stock <= 0) {
-            worker.actionTimer = 0;
-            return BtStatus.Success;
-        }
-        return BtStatus.Running;
+        worker.jobId = null;
+        return result === 'done' ? BtStatus.Success : BtStatus.Failure;
     }
 
     private goToDepot(worker: CrewWorker, deltaTime: number): BtStatus {
@@ -160,24 +162,17 @@ export class WorkerCrewSim {
             return BtStatus.Running;
         }
         worker.actionTimer = 0;
-        const amount = this.economy.depositLoad(worker.carried);
+        const ammo = this.economy.depositLoad(worker.carried);
         worker.carried.length = 0;
-        this.bus.emit('fx:deposit', { x: worker.x, z: worker.z, amount });
+        this.bus.emit('fx:deposit', { x: worker.x, z: worker.z, amount: ammo });
         worker.task = 'rally';
         return BtStatus.Success;
     }
 
     private rally(worker: CrewWorker, deltaTime: number): BtStatus {
         worker.task = 'rally';
-        const zone = this.harvest.nearestUnlockedZone(worker.x, worker.z);
-        if (!zone) {
-            return BtStatus.Success;
-        }
-        return this.moveToward(worker, zone.x, zone.z + 1.4, deltaTime) ? BtStatus.Success : BtStatus.Running;
-    }
-
-    private targetOf(worker: CrewWorker): HarvestVein | null {
-        return this.harvest.veins.find(vein => vein.id === worker.targetVeinId) ?? null;
+        const rally = this.config.rally;
+        return this.moveToward(worker, rally.x, rally.z, deltaTime) ? BtStatus.Success : BtStatus.Running;
     }
 
     private moveToward(unit: { x: number; z: number }, targetX: number, targetZ: number, deltaTime: number): boolean {

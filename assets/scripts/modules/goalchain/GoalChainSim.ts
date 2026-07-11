@@ -35,6 +35,9 @@ export interface GoalChainConfig {
 export class GoalChainSim {
     public phase: GoalPhase = 'guide';
     public vaultOpened = false;
+    public won = true;
+    // 对标案规则：失败后可重新挑战 1 次。
+    public retriesLeft = 1;
     public readonly purchases: GoalPurchase[];
     // 当前驻留充能的牌与进度（0..1），视觉层可画充能环。
     public dwellProgress = 0;
@@ -42,6 +45,7 @@ export class GoalChainSim {
 
     private dwellTimer = 0;
     private presence: (() => { x: number; z: number }) | null = null;
+    private readonly requirements = new Map<string, () => boolean>();
 
     constructor(
         private readonly config: GoalChainConfig,
@@ -56,11 +60,23 @@ export class GoalChainSim {
         this.presence = probe;
     }
 
+    // 给某个购买挂状态门槛（如：打捞大飞机需要满级绳子）。
+    public attachRequirement(purchaseId: string, predicate: () => boolean): void {
+        this.requirements.set(purchaseId, predicate);
+    }
+
+    public eligible(purchase: GoalPurchase): boolean {
+        if (purchase.purchased) {
+            return false;
+        }
+        return this.requirements.get(purchase.id)?.() ?? true;
+    }
+
     // 推荐目标：最便宜的未购项（引导与 HUD 用），不构成强制顺序。
     public next(): GoalPurchase | null {
         let best: GoalPurchase | null = null;
         for (const purchase of this.purchases) {
-            if (purchase.purchased) {
+            if (!this.eligible(purchase)) {
                 continue;
             }
             if (!best || purchase.cost < best.cost) {
@@ -79,7 +95,7 @@ export class GoalChainSim {
     public cheapestAt(x: number, z: number): GoalPurchase | null {
         let best: GoalPurchase | null = null;
         for (const purchase of this.purchases) {
-            if (purchase.purchased || purchase.x !== x || purchase.z !== z) {
+            if (!this.eligible(purchase) || purchase.x !== x || purchase.z !== z) {
                 continue;
             }
             if (!best || purchase.cost < best.cost) {
@@ -89,13 +105,36 @@ export class GoalChainSim {
         return best;
     }
 
-    // 外部（敌潮清场事件）调用：结束演出，出结算。
+    // 外部（敌潮清场事件）调用：结束演出，出胜利结算。
     public finish(): void {
         if (this.phase !== 'boom') {
             return;
         }
         this.phase = 'end';
+        this.won = true;
         this.bus.emit('goal:end');
+    }
+
+    // 围墙被击破：失败结算（可复活重试）。
+    public fail(): void {
+        if (this.phase === 'end') {
+            return;
+        }
+        this.phase = 'end';
+        this.won = false;
+        this.bus.emit('goal:fail');
+    }
+
+    // 复活：回到失败前的阶段继续玩。
+    public revive(): boolean {
+        if (this.phase !== 'end' || this.won || this.retriesLeft <= 0) {
+            return false;
+        }
+        this.retriesLeft -= 1;
+        this.won = true;
+        this.phase = this.vaultOpened ? 'boom' : 'manage';
+        this.bus.emit('goal:revive');
+        return true;
     }
 
     public tick(deltaTime: number): void {
@@ -113,7 +152,7 @@ export class GoalChainSim {
         let target: GoalPurchase | null = null;
         let bestDistance = Infinity;
         for (const purchase of this.purchases) {
-            if (purchase.purchased || !this.economy.canAfford(purchase.cost)) {
+            if (!this.eligible(purchase) || !this.economy.canAfford(purchase.cost)) {
                 continue;
             }
             const radius = purchase.kind === 'vault' ? this.config.vaultRadius : this.config.padRadius;

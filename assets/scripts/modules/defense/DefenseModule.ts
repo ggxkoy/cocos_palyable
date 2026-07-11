@@ -23,8 +23,14 @@ const IMPACT = new Color(255, 255, 255, 255);
 const FLASH_SHELL = new Color(255, 255, 255, 255);
 const BAR_BG = new Color(40, 20, 18, 255);
 const BAR_FILL = new Color(90, 220, 90, 255);
+const WALL = new Color(146, 124, 86, 255);
+const WALL_TOP = new Color(120, 100, 68, 255);
+const WALL_HIT = new Color(255, 96, 70, 255);
+const WALL_BROKEN = new Color(96, 96, 96, 255);
+const WALL_BAR = new Color(96, 176, 255, 255);
 
 const HIT_FLASH_TIME = 0.09;
+const WALL_FLASH_TIME = 0.12;
 
 interface EnemyView {
     readonly root: Node;
@@ -46,11 +52,21 @@ interface TransientFx {
     life: number;
 }
 
+interface WallSegment {
+    readonly node: Node;
+    readonly x: number;
+    flashTimer: number;
+}
+
 export class DefenseModule implements PlayableModule {
     private context: ModuleContext | null = null;
     private readonly enemyViews = new Map<number, EnemyView>();
     private readonly bulletNodes = new Map<number, Node>();
     private readonly fx: TransientFx[] = [];
+    private readonly wallSegments: WallSegment[] = [];
+    private wallBarFill: Node | null = null;
+    private wallBarRoot: Node | null = null;
+    private wallBroken = false;
 
     constructor(
         private readonly defense: DefenseSim,
@@ -61,6 +77,7 @@ export class DefenseModule implements PlayableModule {
         private readonly enemyPrefab: Prefab | null,
         private readonly soldierPrefab: Prefab | null = null,
         private readonly bossPrefab: Prefab | null = null,
+        private readonly wall: { readonly z: number; readonly width: number } | null = null,
     ) {}
 
     public start(context: ModuleContext): void {
@@ -88,6 +105,32 @@ export class DefenseModule implements PlayableModule {
             }
         }
 
+        // 围墙：敌人攻墙的目标。分段沙袋墙 + 耐久条（受击出现），
+        // 段位受击红闪，击破整体变灰塌陷，复活重试时修复。
+        if (this.wall) {
+            const segmentCount = Math.max(4, Math.ceil(this.wall.width / 1.3));
+            const segmentWidth = this.wall.width / segmentCount;
+            for (let i = 0; i < segmentCount; i += 1) {
+                const x = -this.wall.width / 2 + segmentWidth * (i + 0.5);
+                const node = createBox3D(`WallSeg${i}`, context.world, x, 0.42, this.wall.z - 0.32, segmentWidth - 0.1, 0.84, 0.5, WALL);
+                createBox3D('WallCap', node, 0, 0.52, 0, segmentWidth - 0.24, 0.2, 0.36, WALL_TOP);
+                this.wallSegments.push({ node, x, flashTimer: 0 });
+            }
+            const barRoot = new Node('WallBar');
+            context.world.addChild(barRoot);
+            barRoot.setPosition(0, 1.6, this.wall.z - 0.32);
+            barRoot.setRotationFromEuler(-38, 0, 0);
+            const barWidth = Math.min(4.4, this.wall.width * 0.5);
+            createBox3D('WallBarBg', barRoot, 0, 0, 0, barWidth + 0.08, 0.18, 0.02, BAR_BG);
+            this.wallBarFill = createBox3D('WallBarFill', barRoot, 0, 0, 0.01, barWidth, 0.12, 0.02, WALL_BAR);
+            barRoot.active = false;
+            this.wallBarRoot = barRoot;
+
+            context.bus.on('wall:hit', payload => this.onWallHit(payload as { x: number }));
+            context.bus.on('wall:breached', () => this.setWallBroken(true));
+            context.bus.on('goal:revive', () => this.setWallBroken(false));
+        }
+
         context.bus.on('fx:fire', payload => this.spawnMuzzleFlash(payload as { fromX: number; fromZ: number }));
         context.bus.on('fx:hit', payload => this.onHit(payload as HitEvent));
     }
@@ -98,6 +141,7 @@ export class DefenseModule implements PlayableModule {
         }
         this.syncEnemies(deltaTime);
         this.syncBullets();
+        this.syncWall(deltaTime);
 
         for (let i = this.fx.length - 1; i >= 0; i -= 1) {
             const item = this.fx[i];
@@ -192,6 +236,55 @@ export class DefenseModule implements PlayableModule {
                 node.destroy();
                 this.bulletNodes.delete(id);
             }
+        }
+    }
+
+    private syncWall(deltaTime: number): void {
+        // 耐久条：掉过血才出现，按比例缩放。
+        if (this.wallBarRoot && this.wallBarFill) {
+            const damaged = this.defense.wallHp < this.defense.wallMaxHp;
+            this.wallBarRoot.active = damaged && !this.wallBroken;
+            if (damaged) {
+                const ratio = Math.max(0, this.defense.wallHp / this.defense.wallMaxHp);
+                this.wallBarFill.setScale(ratio, 1, 1);
+            }
+        }
+        for (const segment of this.wallSegments) {
+            if (segment.flashTimer > 0) {
+                segment.flashTimer -= deltaTime;
+                if (segment.flashTimer <= 0 && !this.wallBroken) {
+                    setBoxColor(segment.node, WALL);
+                }
+            }
+        }
+    }
+
+    private onWallHit(hit: { x: number }): void {
+        // 最近的段位红闪一下 + 冲击闪光。
+        let best: WallSegment | null = null;
+        for (const segment of this.wallSegments) {
+            if (!best || Math.abs(segment.x - hit.x) < Math.abs(best.x - hit.x)) {
+                best = segment;
+            }
+        }
+        if (best && !this.wallBroken) {
+            setBoxColor(best.node, WALL_HIT);
+            best.flashTimer = WALL_FLASH_TIME;
+        }
+        if (this.context && this.wall) {
+            const impact = createBox3D('WallImpact', this.context.world, hit.x, 0.85, this.wall.z - 0.1, 0.3, 0.3, 0.3, IMPACT);
+            impact.setRotationFromEuler(45, 45, 0);
+            this.fx.push({ node: impact, life: 0.08 });
+        }
+    }
+
+    private setWallBroken(broken: boolean): void {
+        this.wallBroken = broken;
+        for (const segment of this.wallSegments) {
+            segment.flashTimer = 0;
+            setBoxColor(segment.node, broken ? WALL_BROKEN : WALL);
+            // 击破塌陷成半高，修复回正。
+            segment.node.setScale(1, broken ? 0.35 : 1, 1);
         }
     }
 

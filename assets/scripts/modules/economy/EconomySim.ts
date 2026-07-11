@@ -1,10 +1,10 @@
-// 经济模块（纯逻辑）：金币 + 弹药两条资源线。
-// 背上的道具按类型计价（金子/木材价值不同），入库同时补弹药；
-// 防御射击按发消耗弹药，没弹药炮塔就停火（弹药危机感的来源）。
+// 经济模块（纯逻辑）——双货币：
+// 弹药：废料入库兑换（等级越高的废料换的子弹越多），防御射击按发消耗；
+// 金币：只来自杀敌掉落（拾取即入账），用于雇佣与升级绳子。
 export interface EconomyConfig {
-    readonly valueByKind: Readonly<Record<string, number>>;
-    readonly ammoPerItem: number;
+    readonly ammoByKind: Readonly<Record<string, number>>;
     readonly ammoCap: number;
+    readonly coinValue: number;
 }
 
 export class EconomySim {
@@ -13,15 +13,20 @@ export class EconomySim {
 
     constructor(private readonly config: EconomyConfig) {}
 
-    // 把一背包类型化道具换成金币与弹药，返回换得的金币数。
+    // 一背包废料换弹药，返回换得的弹药数（不产金币）。
     public depositLoad(load: ReadonlyArray<string>): number {
-        let value = 0;
+        let gained = 0;
         for (const kind of load) {
-            value += this.config.valueByKind[kind] ?? 1;
+            gained += this.config.ammoByKind[kind] ?? 1;
         }
-        this.gold += value;
-        this.ammo = Math.min(this.config.ammoCap, this.ammo + load.length * this.config.ammoPerItem);
-        return value;
+        this.ammo = Math.min(this.config.ammoCap, this.ammo + gained);
+        return gained;
+    }
+
+    // 捡到金币（敌人掉落）直接入账。
+    public collectCoin(): number {
+        this.gold += this.config.coinValue;
+        return this.config.coinValue;
     }
 
     public canAfford(cost: number): boolean {

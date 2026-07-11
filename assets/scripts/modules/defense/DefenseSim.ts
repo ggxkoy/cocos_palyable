@@ -24,6 +24,13 @@ export interface DefenseConfig {
     readonly fieldHalfWidth: number;
     readonly trickleInterval: number;
     readonly trickleCount: number;
+    // 围墙：敌人到墙前改为攻墙（小兵/BOSS 伤害不同），耐久归零即被击破。
+    readonly wall: {
+        readonly maxHp: number;
+        readonly gruntDamage: number;
+        readonly bossDamage: number;
+        readonly attackInterval: number;
+    };
 }
 
 export type DefenseEnemyKind = 'grunt' | 'boss';
@@ -40,6 +47,7 @@ export interface DefenseEnemy {
     state: DefenseEnemyState;
     stateTimer: number;
     hitCount: number;
+    attackTimer: number;
 }
 
 export interface DefenseBullet {
@@ -60,6 +68,8 @@ export class DefenseSim {
     public readonly enemies: DefenseEnemy[] = [];
     public readonly bullets: DefenseBullet[] = [];
     public trickleActive = false;
+    public wallHp: number;
+    public readonly wallMaxHp: number;
 
     private fireTimer = 0;
     private trickleTimer = 0;
@@ -76,6 +86,8 @@ export class DefenseSim {
         private readonly economy: EconomySim,
         private readonly bus: EventBus,
     ) {
+        this.wallMaxHp = config.wall.maxHp;
+        this.wallHp = config.wall.maxHp;
         bus.on('goal:vault', () => {
             // 终局：渗透波停止，敌潮+BOSS 总攻。演出没有时长——清场才结束。
             this.trickleActive = false;
@@ -87,6 +99,21 @@ export class DefenseSim {
     // 玩家进度探针（已购买数）：进度越深渗透波越密——压力随行为增长，不随时间。
     public attachProgress(probe: () => number): void {
         this.progress = probe;
+    }
+
+    // 复活重试：修满围墙，现存敌人被击退（走死亡表现，不掉金币）。
+    public reviveWall(): void {
+        this.wallHp = this.wallMaxHp;
+        for (const enemy of this.enemies) {
+            if (enemy.state === 'alive') {
+                enemy.hp = 0;
+                enemy.hitCount += 1;
+                enemy.state = 'dying';
+                enemy.stateTimer = this.config.deathTime;
+                this.bus.emit('fx:hit', { enemyId: enemy.id, x: enemy.x, z: enemy.z, died: true });
+            }
+        }
+        this.bullets.length = 0;
     }
 
     public startTrickle(): void {
@@ -151,6 +178,19 @@ export class DefenseSim {
             if (enemy.state === 'alive') {
                 const speed = enemy.kind === 'boss' ? this.config.bossSpeed : this.config.enemySpeed;
                 enemy.z = Math.max(this.config.lineZ, enemy.z - speed * deltaTime);
+                // 抵墙即攻墙：小兵挠、BOSS 砸（对标案 1:10 的伤害关系）。
+                if (this.wallHp > 0 && enemy.z <= this.config.lineZ + 0.01) {
+                    enemy.attackTimer += deltaTime;
+                    if (enemy.attackTimer >= this.config.wall.attackInterval) {
+                        enemy.attackTimer = 0;
+                        const damage = enemy.kind === 'boss' ? this.config.wall.bossDamage : this.config.wall.gruntDamage;
+                        this.wallHp = Math.max(0, this.wallHp - damage);
+                        this.bus.emit('wall:hit', { x: enemy.x, damage });
+                        if (this.wallHp <= 0) {
+                            this.bus.emit('wall:breached');
+                        }
+                    }
+                }
             } else if (enemy.state === 'dying') {
                 enemy.stateTimer -= deltaTime;
                 if (enemy.stateTimer <= 0) {
@@ -243,6 +283,7 @@ export class DefenseSim {
             state: 'alive',
             stateTimer: 0,
             hitCount: 0,
+            attackTimer: 0,
         });
         this.nextId += 1;
     }
@@ -262,6 +303,7 @@ export class DefenseSim {
                 state: 'alive',
                 stateTimer: 0,
                 hitCount: 0,
+                attackTimer: 0,
             });
             this.nextId += 1;
         }

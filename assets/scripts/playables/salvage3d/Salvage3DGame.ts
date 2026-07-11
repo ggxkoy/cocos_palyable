@@ -7,9 +7,9 @@ import { DefenseModule } from '../../modules/defense/DefenseModule';
 import { EndCardModule } from '../../modules/endcard/EndCardModule';
 import { GoalChainModule } from '../../modules/goalchain/GoalChainModule';
 import { GuideModule } from '../../modules/guide/GuideModule';
-import { HarvestModule } from '../../modules/harvest/HarvestModule';
 import { HudModule } from '../../modules/hud/HudModule';
 import { PickupModule } from '../../modules/pickups/PickupModule';
+import { RopeModule } from '../../modules/rope/RopeModule';
 import { StageModule } from '../../modules/stage/StageModule';
 import { WorkerCrewModule } from '../../modules/workers/WorkerCrewModule';
 import { SALVAGE3D_CONFIG } from './Salvage3DConfig';
@@ -79,18 +79,30 @@ export class Salvage3DGame extends Component {
             new CameraRigModule(config.camera, uiCamera, () => ({ x: this.sim.avatar.x, z: this.sim.avatar.z })),
             new StageModule({
                 ground: config.world.ground,
+                swamp: config.world.swamp,
                 depot: config.world.depot,
                 hordeLineZ: config.world.hordeLineZ,
-            }, this.sim.harvest, this.depotPrefab, this.groundMaterial),
-            new HarvestModule(this.sim.harvest, config.veinStock, this.wreckPrefab),
+            }, this.depotPrefab, this.groundMaterial),
+            new RopeModule(this.sim.rope, this.wreckPrefab),
             new PickupModule(this.sim.pickups),
             new GoalChainModule(this.sim.goal, this.sim.economy, config.world.vault, this.planePrefab),
-            new DefenseModule(this.sim.defense, config.world.turrets, config.defense.deathTime, config.defense.enemyAnimClips, this.turretPrefab, this.enemyPrefab, this.turretSoldierPrefab, this.bossPrefab),
+            new DefenseModule(
+                this.sim.defense,
+                config.world.turrets,
+                config.defense.deathTime,
+                config.defense.enemyAnimClips,
+                this.turretPrefab,
+                this.enemyPrefab,
+                this.turretSoldierPrefab,
+                this.bossPrefab,
+                { z: config.world.hordeLineZ, width: config.world.ground.width },
+            ),
             new WorkerCrewModule(this.sim.workers, config.capacity, this.workerPrefab),
             new AvatarModule(this.sim.avatar, this.playerPrefab, config.animClips),
-            new GuideModule(this.sim.goal, this.sim.avatar, this.sim.harvest, config.world.depot, config.capacity),
+            new GuideModule(this.sim.goal, this.sim.avatar, this.sim.rope, this.sim.pickups, config.world.depot, config.capacity),
             new HudModule(config.texts, this.sim.economy, this.sim.goal, config.defense.ammoCap),
-            new EndCardModule(config.texts, config.ctaUrl),
+            // 复活重试：修墙+击退现存敌人（reviveWall 由 goal:revive 事件驱动）。
+            new EndCardModule(config.texts, config.ctaUrl, () => this.sim.goal.revive(), () => this.sim.goal.retriesLeft > 0),
         ];
 
         for (const module of this.modules) {

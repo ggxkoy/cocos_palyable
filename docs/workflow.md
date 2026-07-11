@@ -59,10 +59,14 @@ BehaviorTree（Sequence/Selector/Condition/Action/Repeat，驱动自主人物：
   （MeshRenderer + builtin-standard），3D 版占位资产；换美术=换模型 prefab。
 - `assets/scripts/modules/<名>/` —— 每个玩法功能一个模块，**Sim（纯逻辑，
   node 可冒烟）+ Module（cc 视觉）** 两个文件。现有模块：
-  economy（金币/弹药）、harvest（矿脉/残骸+重生）、avatar（玩家驱动主角，
-  点击移动+范围自动交互）、workers（行为树雇员）、goalchain（目标链+阶段机+大锚点）、
-  defense（敌潮+炮塔）、camera（等距相机+灯光）、stage（场地）、guide（3D 定向引导）、
-  hud（2D 叠加）、endcard（结算+CTA）。
+  economy（双货币：废料→弹药兑换、金币只来自杀敌）、work/JobProvider（通用作业接口，
+  主角与雇员对接任何作业源）、rope（打捞绳：分级残骸+绳长/质量等级+持续拉拽作业）、
+  harvest（矿脉/残骸+重生，JobProvider 的另一种实现）、pickups（类型化掉落物）、
+  avatar（虚拟摇杆主角+感知状态机：金币入账/废料背身/敌人近战远程/范围自动作业）、
+  workers（行为树雇员，JobProvider 大脑）、goalchain(目标链+非线性驻留购买+
+  requirement 门槛+fail/revive)、defense（敌潮+实体子弹炮塔+围墙耐久+攻墙/击破）、
+  camera（等距跟随相机+灯光）、stage（三屏大地图+泥潭带）、guide（3D 定向引导）、
+  hud（2D 叠加）、endcard（胜利/失败结算+复活重试+CTA）。
 - **拼一个新 playable** = `assets/scripts/playables/<名>/` 三个文件：
   Config（纯配置：世界坐标、经济、文案、CTA）、Sim（createXxxSim：挑纯逻辑模块、
   注入依赖、总线接线）、Game（cc 组件：挑视觉模块清单、逐个 start/tick）

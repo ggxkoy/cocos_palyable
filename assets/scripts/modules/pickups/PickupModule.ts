@@ -14,6 +14,10 @@ interface PickupStyle {
 const STYLES: Record<string, PickupStyle> = {
     gold: { color: new Color(247, 183, 49, 255), size: { w: 0.3, h: 0.24, l: 0.3 }, spin: true },
     wood: { color: new Color(140, 96, 54, 255), size: { w: 0.55, h: 0.2, l: 0.2 }, spin: false },
+    // 泥潭废料三档：越高级越大、色越亮（对应兑换的子弹越多）。
+    scrap1: { color: new Color(130, 148, 172, 255), size: { w: 0.3, h: 0.22, l: 0.26 }, spin: false },
+    scrap2: { color: new Color(122, 168, 212, 255), size: { w: 0.42, h: 0.28, l: 0.34 }, spin: false },
+    scrap3: { color: new Color(140, 196, 255, 255), size: { w: 0.55, h: 0.36, l: 0.44 }, spin: false },
 };
 const FALLBACK: PickupStyle = { color: new Color(170, 170, 170, 255), size: { w: 0.28, h: 0.28, l: 0.28 }, spin: false };
 

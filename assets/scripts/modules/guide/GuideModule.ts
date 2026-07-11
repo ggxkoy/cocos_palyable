@@ -3,10 +3,11 @@ import { createBox3D } from '../../common3d/Placeholder3D';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { AvatarSim } from '../avatar/AvatarSim';
 import { GoalChainSim } from '../goalchain/GoalChainSim';
-import { HarvestSim } from '../harvest/HarvestSim';
+import { PickupSim } from '../pickups/PickupSim';
+import { RopeSim } from '../rope/RopeSim';
 
-// 3D 定向引导标记：悬浮金色菱形，指向玩家该点的下一处——
-// 可买目标 > 背满去回收站 > 最近残骸。
+// 3D 定向引导标记：悬浮金色菱形，指向玩家该去的下一处——
+// 可买目标牌 > 背满去回收站 > 地上的金币 > 绳子拉得动的最近残骸。
 const MARKER = new Color(255, 216, 95, 255);
 
 export class GuideModule implements PlayableModule {
@@ -15,7 +16,8 @@ export class GuideModule implements PlayableModule {
     constructor(
         private readonly goal: GoalChainSim,
         private readonly avatar: AvatarSim,
-        private readonly harvest: HarvestSim,
+        private readonly rope: RopeSim,
+        private readonly pickups: PickupSim,
         private readonly depot: { readonly x: number; readonly z: number },
         private readonly capacity: number,
     ) {}
@@ -42,7 +44,7 @@ export class GuideModule implements PlayableModule {
         } else if (this.avatar.carried.length >= this.capacity) {
             target = this.depot;
         } else {
-            target = this.harvest.nearestStocked(this.avatar.x, this.avatar.z, 99);
+            target = this.nearestCoin() ?? this.nearestPullableWreck();
         }
 
         if (!target) {
@@ -53,5 +55,38 @@ export class GuideModule implements PlayableModule {
         const bob = Math.sin(time * 5) * 0.18;
         this.marker.setPosition(target.x, 1.9 + bob, target.z);
         this.marker.setRotationFromEuler(45, time * 90 % 360, 45);
+    }
+
+    // 金币是升级绳子的唯一来源，地上有钱先引去捡。
+    private nearestCoin(): { x: number; z: number } | null {
+        let best: { x: number; z: number } | null = null;
+        let bestDistance = Infinity;
+        for (const pickup of this.pickups.pickups) {
+            if (!pickup.alive || pickup.kind !== 'gold') {
+                continue;
+            }
+            const distance = Math.hypot(pickup.x - this.avatar.x, pickup.z - this.avatar.z);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = pickup;
+            }
+        }
+        return best;
+    }
+
+    private nearestPullableWreck(): { x: number; z: number } | null {
+        let best: { x: number; z: number } | null = null;
+        let bestDistance = Infinity;
+        for (const wreck of this.rope.wrecks) {
+            if (wreck.state === 'respawning' || wreck.tier > this.rope.level) {
+                continue;
+            }
+            const distance = Math.hypot(wreck.x - this.avatar.x, wreck.z - this.avatar.z);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = wreck;
+            }
+        }
+        return best;
     }
 }
