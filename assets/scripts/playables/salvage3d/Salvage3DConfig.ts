@@ -86,7 +86,8 @@ export const SALVAGE3D_CONFIG = {
     pickups: {
         pickupRange: 1.35,
         // 废料→子弹兑换率：越高级的物体换的子弹越多。
-        ammoByKind: { scrap1: 3, scrap2: 5, scrap3: 8 } as Record<string, number>,
+        // （主角攻击与炮塔共用弹池后调高了一级件的产出，保证前期供得上。）
+        ammoByKind: { scrap1: 4, scrap2: 6, scrap3: 9 } as Record<string, number>,
         // 金币面值（敌人掉落，拾取直接入账）。
         coinValue: 8,
     },
@@ -109,12 +110,12 @@ export const SALVAGE3D_CONFIG = {
         bulletSpeed: 14,
         deathTime: 1.1,
         trickleInterval: 5.5,
-        trickleCount: 3,
+        trickleCount: 2,
         ammoCap: 80,
         // 围墙：敌人抵墙改攻墙。对标案伤害关系——小兵挠 1、BOSS 砸 10；
         // 击破=失败，可复活重试 1 次。
         wall: {
-            maxHp: 120,
+            maxHp: 140,
             gruntDamage: 1,
             bossDamage: 10,
             attackInterval: 1.0,

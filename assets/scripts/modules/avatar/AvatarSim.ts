@@ -9,6 +9,8 @@ import { JobProvider } from '../work/JobProvider';
 //   敌人 → 按距离判定近战还是远程攻击；
 //   都没有 → 范围内自动干活（拉绳打捞/敲击，由 JobProvider 决定），
 //   背满挨着回收站自动换弹药。
+// 没有子弹就无法攻击：主角每次出手消耗 1 发弹药（与炮塔同一弹池），
+// 弹药打空时感知直接忽略敌人——只能回去捞废料换子弹，这就是压力循环。
 export interface EnemyContact {
     readonly id: number;
     readonly x: number;
@@ -88,7 +90,8 @@ export class AvatarSim {
         // 感知：范围内最近的道具与敌人，谁近听谁的。
         const pickup = this.pickups.nearestAlive(this.x, this.z, this.config.pickupRange);
         const usablePickup = pickup && (pickup.kind === 'gold' || this.carried.length < this.config.capacity) ? pickup : null;
-        const enemy = this.enemies.nearestAlive(this.x, this.z, this.config.rangedRange);
+        // 没弹药就不索敌：打不了，去捞废料换子弹。
+        const enemy = this.economy.hasAmmo() ? this.enemies.nearestAlive(this.x, this.z, this.config.rangedRange) : null;
         const pickupDistance = usablePickup ? Math.hypot(usablePickup.x - this.x, usablePickup.z - this.z) : Infinity;
         const enemyDistance = enemy ? Math.hypot(enemy.x - this.x, enemy.z - this.z) : Infinity;
 
@@ -97,6 +100,7 @@ export class AvatarSim {
             this.setMode(melee ? 'melee' : 'ranged');
             if (this.attackTimer >= this.config.attackInterval) {
                 this.attackTimer = 0;
+                this.economy.consumeAmmo(1);
                 this.enemies.damage(enemy.id, this.config.attackDamage);
                 this.bus.emit(melee ? 'fx:melee' : 'fx:shot', {
                     fromX: this.x,

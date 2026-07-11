@@ -40,7 +40,9 @@ export class CameraRigModule implements PlayableModule {
         camera.near = 0.3;
         camera.far = 160;
         camera.priority = -10;
-        camera.visibility = LAYER_DEFAULT;
+        // 除 UI 层外全部可见：导入的 FBX prefab 子节点 layer 不受我们控制，
+        // 收窄可见性只会让模型莫名消失（layer 另有 ModelFit 归一化兜底）。
+        camera.visibility = (0xffffffff & ~LAYER_UI_2D) >>> 0;
         camera.clearFlags = CLEAR_ALL;
         camera.clearColor = SKY.clone();
         this.cameraNode = cameraNode;

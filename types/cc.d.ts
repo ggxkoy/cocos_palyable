@@ -78,6 +78,7 @@ declare module 'cc' {
     public setPosition(x: number, y: number, z?: number): void;
     public getPosition(out?: Vec3): Vec3;
     public setScale(x: number, y: number, z?: number): void;
+    public getScale(out?: Vec3): Vec3;
     public setRotationFromEuler(x: number, y: number, z: number): void;
     public lookAt(pos: Vec3, up?: Vec3): void;
     public setSiblingIndex(index: number): void;
@@ -206,6 +207,7 @@ declare module 'cc' {
   export class SkeletalAnimation extends Component {
     public clips: (AnimationClip | null)[];
     public defaultClip: AnimationClip | null;
+    public useBakedAnimation: boolean;
     public play(name?: string): void;
     public crossFade(name: string, duration?: number): void;
     public getState(name: string): AnimationState | null;

@@ -35,7 +35,13 @@ export class FbxAnimator {
     private activeName = '';
     private segTime = 0;
 
-    constructor(private readonly anim: SkeletalAnimation | null) {}
+    constructor(private readonly anim: SkeletalAnimation | null) {
+        if (anim) {
+            // 必须关掉预烘焙蒙皮：烘焙模式只认导入时烘好的剪辑，跨 FBX 挂进来的
+            // 剪辑与帧段手动采样都没有烘焙数据，蒙皮会坍缩成一团（模型看不见）。
+            anim.useBakedAnimation = false;
+        }
+    }
 
     public define(name: string, def: AnimatorStateDef): void {
         if (!this.anim || !def.clip) {
