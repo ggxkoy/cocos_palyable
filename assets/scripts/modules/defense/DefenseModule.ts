@@ -1,15 +1,17 @@
-import { Color, Node, Prefab, SkeletalAnimation, instantiate } from 'cc';
+import { AnimationClip, Color, Node, Prefab, SkeletalAnimation, instantiate } from 'cc';
+import { FbxAnimator, bakedClipOf } from '../../common3d/FbxAnimator';
+import { fitModelHeight } from '../../common3d/ModelFit';
 import { createBox3D, setBoxColor } from '../../common3d/Placeholder3D';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { DefenseEnemy, DefenseSim, HitEvent } from './DefenseSim';
 
-// 防御视觉：炮塔+驻守小兵、实体子弹、敌潮小兵与 BOSS。
-// 命中三重反馈：受击动画（prefab 有 hit 剪辑就 crossFade，占位盒子做压缩弹跳）、
-// 命中特效（白色冲击闪光）、闪白（白壳短暂罩住模型；真·菲涅耳边缘光
-// 需要自定义 rim shader，美术阶段以 fresnel-flash.effect 替换此近似）。
-// 血条：首次受击出现，按血量比例缩放。
-// 死亡：死亡动画（prefab death 剪辑 / 占位盒子向后倒地），整体变灰、
-// 下沉缩小渐隐后移除（真·透明渐隐需透明材质，美术阶段替换）。
+// 防御视觉：炮塔+驻守小兵、实体子弹、敌潮小兵与 BOSS、围墙。
+// 动画全部走 FbxAnimator 状态机：
+//   小兵（06_敌军）用独立剪辑：move/attack 循环，hit/death 一次性；
+//   BOSS（08_boss kulou）是单条 Take 001 按帧号切段（见目录里的动画帧数.txt）；
+//   炮塔小兵（09）同理，持枪待机/站立开枪两段。
+// 命中三重反馈：受击动画、命中特效（白色冲击闪光）、闪白（白壳近似菲涅耳，
+// 美术阶段以 rim shader 替换）。血条首次受击出现；死亡→变灰下沉缩小渐隐。
 const TURRET_BASE = new Color(70, 110, 170, 255);
 const TURRET_BARREL = new Color(36, 48, 66, 255);
 const SOLDIER = new Color(90, 140, 200, 255);
@@ -30,21 +32,65 @@ const WALL_BROKEN = new Color(96, 96, 96, 255);
 const WALL_BAR = new Color(96, 176, 255, 255);
 
 const HIT_FLASH_TIME = 0.09;
+const HIT_ANIM_TIME = 0.35;
 const WALL_FLASH_TIME = 0.12;
+const SOLDIER_SHOOT_HOLD = 0.3;
+
+// 08_boss（kulou）动画帧数.txt：待机0-60 移动120-140 攻击190-215 死亡70-110。
+const BOSS_SEGMENTS = {
+    move: { from: 120, to: 140 },
+    attack: { from: 190, to: 215 },
+    death: { from: 70, to: 110, loop: false },
+} as const;
+
+// 09_炮塔小兵（蓝兵）：持枪待机 0-30，站立开枪 40-47。
+const SOLDIER_SEGMENTS = {
+    idle: { from: 0, to: 30 },
+    shoot: { from: 40, to: 47 },
+} as const;
+
+/** 敌潮小兵（06_敌军 Monster2）的剪辑槽位。 */
+export interface EnemyClipSet {
+    readonly move: AnimationClip | null;
+    readonly attack: AnimationClip | null;
+    readonly hit: AnimationClip | null;
+    readonly death: AnimationClip | null;
+}
+
+export interface DefenseViewOptions {
+    readonly turretPrefab: Prefab | null;
+    readonly enemyPrefab: Prefab | null;
+    readonly soldierPrefab: Prefab | null;
+    readonly bossPrefab: Prefab | null;
+    readonly enemyClips: EnemyClipSet;
+    /** 自适应目标高度（米，0=不缩放）。 */
+    readonly enemyHeight: number;
+    readonly bossHeight: number;
+    readonly soldierHeight: number;
+    readonly turretHeight: number;
+    /** 围墙位置与宽度；null 则不渲染墙。 */
+    readonly wall: { readonly z: number; readonly width: number } | null;
+}
 
 interface EnemyView {
     readonly root: Node;
     readonly model: Node;
-    readonly anim: SkeletalAnimation | null;
+    readonly animator: FbxAnimator | null;
     readonly boxParts: Node[];
     readonly flashShell: Node;
     readonly barRoot: Node;
     readonly barFill: Node;
     readonly barWidth: number;
-    readonly baseHeight: number;
     flashTimer: number;
+    hitAnimTimer: number;
     deathStarted: boolean;
     grayed: boolean;
+}
+
+interface TurretView {
+    readonly x: number;
+    readonly animator: FbxAnimator | null;
+    fireTimer: number;
 }
 
 interface TransientFx {
@@ -62,6 +108,7 @@ export class DefenseModule implements PlayableModule {
     private context: ModuleContext | null = null;
     private readonly enemyViews = new Map<number, EnemyView>();
     private readonly bulletNodes = new Map<number, Node>();
+    private readonly turretViews: TurretView[] = [];
     private readonly fx: TransientFx[] = [];
     private readonly wallSegments: WallSegment[] = [];
     private wallBarFill: Node | null = null;
@@ -72,55 +119,64 @@ export class DefenseModule implements PlayableModule {
         private readonly defense: DefenseSim,
         private readonly turrets: ReadonlyArray<{ readonly x: number; readonly z: number }>,
         private readonly deathTime: number,
-        private readonly enemyAnimClips: Readonly<Record<string, string>>,
-        private readonly turretPrefab: Prefab | null,
-        private readonly enemyPrefab: Prefab | null,
-        private readonly soldierPrefab: Prefab | null = null,
-        private readonly bossPrefab: Prefab | null = null,
-        private readonly wall: { readonly z: number; readonly width: number } | null = null,
+        private readonly lineZ: number,
+        private readonly options: DefenseViewOptions,
     ) {}
 
     public start(context: ModuleContext): void {
         this.context = context;
         for (const [index, turret] of this.turrets.entries()) {
             let root: Node;
-            if (this.turretPrefab) {
-                root = instantiate(this.turretPrefab);
+            if (this.options.turretPrefab) {
+                root = instantiate(this.options.turretPrefab);
                 root.name = `Turret${index + 1}`;
                 root.setPosition(turret.x, 0, turret.z);
                 context.world.addChild(root);
+                fitModelHeight(root, this.options.turretHeight);
             } else {
                 root = createBox3D(`Turret${index + 1}`, context.world, turret.x, 0.4, turret.z, 0.9, 0.8, 0.9, TURRET_BASE);
                 const barrel = createBox3D('Barrel', root, 0, 0.35, 0.55, 0.22, 0.22, 0.9, TURRET_BARREL);
                 barrel.setPosition(0, 0.35, 0.55);
             }
-            if (this.soldierPrefab) {
-                const soldier = instantiate(this.soldierPrefab);
+
+            // 驻守小兵：单条 Take 001 帧段（待机/开枪），开火瞬间切开枪段。
+            let animator: FbxAnimator | null = null;
+            if (this.options.soldierPrefab) {
+                const soldier = instantiate(this.options.soldierPrefab);
                 soldier.name = 'TurretSoldier';
-                soldier.setPosition(0, this.turretPrefab ? 0 : 0.45, 0);
-                root.addChild(soldier);
+                context.world.addChild(soldier);
+                soldier.setPosition(turret.x - 0.75, 0, turret.z + 0.35);
+                fitModelHeight(soldier, this.options.soldierHeight);
+                const anim = soldier.getComponentInChildren(SkeletalAnimation);
+                animator = new FbxAnimator(anim);
+                const baked = bakedClipOf(anim);
+                animator.define('idle', { clip: baked, ...SOLDIER_SEGMENTS.idle });
+                animator.define('shoot', { clip: baked, ...SOLDIER_SEGMENTS.shoot, fade: 0.06 });
+                animator.set('idle');
             } else {
                 const soldier = createBox3D('TurretSoldier', root, 0, 0.75, 0, 0.3, 0.55, 0.26, SOLDIER);
                 createBox3D('SoldierHead', soldier, 0, 0.42, 0, 0.22, 0.22, 0.22, SOLDIER);
             }
+            this.turretViews.push({ x: turret.x, animator, fireTimer: 0 });
         }
 
         // 围墙：敌人攻墙的目标。分段沙袋墙 + 耐久条（受击出现），
         // 段位受击红闪，击破整体变灰塌陷，复活重试时修复。
-        if (this.wall) {
-            const segmentCount = Math.max(4, Math.ceil(this.wall.width / 1.3));
-            const segmentWidth = this.wall.width / segmentCount;
+        if (this.options.wall) {
+            const wall = this.options.wall;
+            const segmentCount = Math.max(4, Math.ceil(wall.width / 1.3));
+            const segmentWidth = wall.width / segmentCount;
             for (let i = 0; i < segmentCount; i += 1) {
-                const x = -this.wall.width / 2 + segmentWidth * (i + 0.5);
-                const node = createBox3D(`WallSeg${i}`, context.world, x, 0.42, this.wall.z - 0.32, segmentWidth - 0.1, 0.84, 0.5, WALL);
+                const x = -wall.width / 2 + segmentWidth * (i + 0.5);
+                const node = createBox3D(`WallSeg${i}`, context.world, x, 0.42, wall.z - 0.32, segmentWidth - 0.1, 0.84, 0.5, WALL);
                 createBox3D('WallCap', node, 0, 0.52, 0, segmentWidth - 0.24, 0.2, 0.36, WALL_TOP);
                 this.wallSegments.push({ node, x, flashTimer: 0 });
             }
             const barRoot = new Node('WallBar');
             context.world.addChild(barRoot);
-            barRoot.setPosition(0, 1.6, this.wall.z - 0.32);
+            barRoot.setPosition(0, 1.6, wall.z - 0.32);
             barRoot.setRotationFromEuler(-38, 0, 0);
-            const barWidth = Math.min(4.4, this.wall.width * 0.5);
+            const barWidth = Math.min(4.4, wall.width * 0.5);
             createBox3D('WallBarBg', barRoot, 0, 0, 0, barWidth + 0.08, 0.18, 0.02, BAR_BG);
             this.wallBarFill = createBox3D('WallBarFill', barRoot, 0, 0, 0.01, barWidth, 0.12, 0.02, WALL_BAR);
             barRoot.active = false;
@@ -131,7 +187,7 @@ export class DefenseModule implements PlayableModule {
             context.bus.on('goal:revive', () => this.setWallBroken(false));
         }
 
-        context.bus.on('fx:fire', payload => this.spawnMuzzleFlash(payload as { fromX: number; fromZ: number }));
+        context.bus.on('fx:fire', payload => this.onFire(payload as { fromX: number; fromZ: number }));
         context.bus.on('fx:hit', payload => this.onHit(payload as HitEvent));
     }
 
@@ -142,6 +198,7 @@ export class DefenseModule implements PlayableModule {
         this.syncEnemies(deltaTime);
         this.syncBullets();
         this.syncWall(deltaTime);
+        this.syncTurrets(deltaTime);
 
         for (let i = this.fx.length - 1; i >= 0; i -= 1) {
             const item = this.fx[i];
@@ -190,16 +247,26 @@ export class DefenseModule implements PlayableModule {
                 view.barFill.setPosition(-view.barWidth * (1 - ratio) / 2, 0, 0.01);
             }
 
+            // 动画状态机：死亡 > 受击 > 攻墙 > 行军。
+            if (view.animator) {
+                if (enemy.state === 'dying') {
+                    view.animator.set('death');
+                } else if (view.hitAnimTimer > 0) {
+                    view.hitAnimTimer -= deltaTime;
+                } else if (enemy.z <= this.lineZ + 0.02) {
+                    view.animator.set('attack');
+                } else {
+                    view.animator.set('move');
+                }
+                view.animator.tick(deltaTime);
+            }
+
             // 死亡：死亡动画/倒地 → 变灰 → 下沉缩小渐隐。
             if (enemy.state === 'dying') {
                 if (!view.deathStarted) {
                     view.deathStarted = true;
                     view.barRoot.active = false;
                     view.flashShell.active = false;
-                    const deathClip = this.enemyAnimClips.death;
-                    if (view.anim && deathClip && view.anim.getState(deathClip)) {
-                        view.anim.crossFade(deathClip, 0.1);
-                    }
                 }
                 if (!view.grayed) {
                     view.grayed = true;
@@ -208,7 +275,7 @@ export class DefenseModule implements PlayableModule {
                     }
                 }
                 const progress = Math.min(1, Math.max(0, 1 - enemy.stateTimer / this.deathTime));
-                if (!view.anim && view.boxParts.length > 0) {
+                if (!view.animator && view.boxParts.length > 0) {
                     // 占位盒子：向后倒地。
                     view.model.setRotationFromEuler(-Math.min(90, progress * 2 * 90), 0, 0);
                 }
@@ -236,6 +303,21 @@ export class DefenseModule implements PlayableModule {
                 node.destroy();
                 this.bulletNodes.delete(id);
             }
+        }
+    }
+
+    private syncTurrets(deltaTime: number): void {
+        for (const view of this.turretViews) {
+            if (!view.animator) {
+                continue;
+            }
+            if (view.fireTimer > 0) {
+                view.fireTimer -= deltaTime;
+                view.animator.set('shoot');
+            } else {
+                view.animator.set('idle');
+            }
+            view.animator.tick(deltaTime);
         }
     }
 
@@ -271,8 +353,8 @@ export class DefenseModule implements PlayableModule {
             setBoxColor(best.node, WALL_HIT);
             best.flashTimer = WALL_FLASH_TIME;
         }
-        if (this.context && this.wall) {
-            const impact = createBox3D('WallImpact', this.context.world, hit.x, 0.85, this.wall.z - 0.1, 0.3, 0.3, 0.3, IMPACT);
+        if (this.context && this.options.wall) {
+            const impact = createBox3D('WallImpact', this.context.world, hit.x, 0.85, this.options.wall.z - 0.1, 0.3, 0.3, 0.3, IMPACT);
             impact.setRotationFromEuler(45, 45, 0);
             this.fx.push({ node: impact, life: 0.08 });
         }
@@ -300,16 +382,31 @@ export class DefenseModule implements PlayableModule {
         if (!view || view.deathStarted) {
             return;
         }
-        // 受击动画：prefab 有 hit 剪辑就播，占位盒子做压缩弹跳。
-        const hitClip = this.enemyAnimClips.hit;
-        if (view.anim && hitClip && view.anim.getState(hitClip)) {
-            view.anim.crossFade(hitClip, 0.05);
-        } else {
+        // 受击动画：状态机有 hit 状态就重播（BOSS 无受击段则保持当前段），
+        // 占位盒子做压缩弹跳。
+        if (view.animator?.has('hit')) {
+            view.animator.set('hit', true);
+            view.hitAnimTimer = HIT_ANIM_TIME;
+        } else if (!view.animator) {
             view.model.setScale(1.15, 0.78, 1.15);
         }
         // 闪白（菲涅耳近似）：白壳短暂罩住。
         view.flashShell.active = true;
         view.flashTimer = HIT_FLASH_TIME;
+    }
+
+    private onFire(fire: { fromX: number; fromZ: number }): void {
+        this.spawnMuzzleFlash(fire);
+        // 开火的那座炮塔小兵切开枪段。
+        let best: TurretView | null = null;
+        for (const view of this.turretViews) {
+            if (!best || Math.abs(view.x - fire.fromX) < Math.abs(best.x - fire.fromX)) {
+                best = view;
+            }
+        }
+        if (best) {
+            best.fireTimer = SOLDIER_SHOOT_HOLD;
+        }
     }
 
     private spawnMuzzleFlash(fire: { fromX: number; fromZ: number }): void {
@@ -324,7 +421,7 @@ export class DefenseModule implements PlayableModule {
     private createEnemyView(enemy: DefenseEnemy): EnemyView {
         const world = this.context!.world;
         const isBoss = enemy.kind === 'boss';
-        const prefab = isBoss ? this.bossPrefab : this.enemyPrefab;
+        const prefab = isBoss ? this.options.bossPrefab : this.options.enemyPrefab;
         const height = isBoss ? 1.4 : 0.8;
 
         const root = new Node(`${isBoss ? 'Boss' : 'Enemy'}${enemy.id}`);
@@ -334,16 +431,30 @@ export class DefenseModule implements PlayableModule {
         const model = new Node('Model');
         root.addChild(model);
 
-        let anim: SkeletalAnimation | null = null;
+        let animator: FbxAnimator | null = null;
         const boxParts: Node[] = [];
         if (prefab) {
             const instance = instantiate(prefab);
             model.addChild(instance);
-            anim = instance.getComponentInChildren(SkeletalAnimation);
-            const moveClip = this.enemyAnimClips.move;
-            if (anim && moveClip && anim.getState(moveClip)) {
-                anim.play(moveClip);
+            // 敌人朝防线（-z）行军，模型面向行军方向。
+            instance.setRotationFromEuler(0, 180, 0);
+            fitModelHeight(instance, isBoss ? this.options.bossHeight : this.options.enemyHeight);
+            const anim = instance.getComponentInChildren(SkeletalAnimation);
+            animator = new FbxAnimator(anim);
+            if (isBoss) {
+                // BOSS：单条 Take 001 帧段（见 08_boss/动画帧数.txt）。
+                const baked = bakedClipOf(anim);
+                animator.define('move', { clip: baked, ...BOSS_SEGMENTS.move });
+                animator.define('attack', { clip: baked, ...BOSS_SEGMENTS.attack });
+                animator.define('death', { clip: baked, ...BOSS_SEGMENTS.death });
+            } else {
+                const clips = this.options.enemyClips;
+                animator.define('move', { clip: clips.move });
+                animator.define('attack', { clip: clips.attack });
+                animator.define('hit', { clip: clips.hit, loop: false, fade: 0.05 });
+                animator.define('death', { clip: clips.death, loop: false, fade: 0.1 });
             }
+            animator.set('move');
         } else if (isBoss) {
             const body = createBox3D('Body', model, 0, 0.65, 0, 1.1, 1.3, 1.0, BOSS);
             const head = createBox3D('Head', model, 0, 1.5, 0, 0.5, 0.5, 0.5, BOSS);
@@ -372,14 +483,14 @@ export class DefenseModule implements PlayableModule {
         return {
             root,
             model,
-            anim,
+            animator,
             boxParts,
             flashShell,
             barRoot,
             barFill,
             barWidth,
-            baseHeight: height,
             flashTimer: 0,
+            hitAnimTimer: 0,
             deathStarted: false,
             grayed: false,
         };

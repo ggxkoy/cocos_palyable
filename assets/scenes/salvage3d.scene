@@ -213,7 +213,41 @@
     "_parent": {
       "__id__": 2
     },
-    "_children": [],
+    "_children": [
+      {
+        "__id__": 20
+      },
+      {
+        "__id__": 22
+      },
+      {
+        "__id__": 24
+      },
+      {
+        "__id__": 26
+      },
+      {
+        "__id__": 28
+      },
+      {
+        "__id__": 30
+      },
+      {
+        "__id__": 32
+      },
+      {
+        "__id__": 34
+      },
+      {
+        "__id__": 36
+      },
+      {
+        "__id__": 38
+      },
+      {
+        "__id__": 40
+      }
+    ],
     "_active": true,
     "_components": [
       {
@@ -529,14 +563,720 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "playerPrefab": {
-      "__uuid__": "6fe6377e-9821-497a-906f-8d4bd056402c@8af10",
+    "_id": "salvage3d-gameComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "StageView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 21
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-StageViewNode"
+  },
+  {
+    "__type__": "d14c3a8GnxU+7CstgW48gO1",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 20
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "depotPrefab": {
+      "__uuid__": "bf03196a-c7cd-46f5-ab20-47cb28095d25@7c137",
       "__expectedType__": "cc.Prefab"
     },
+    "groundMaterial": null,
+    "_id": "salvage3d-StageViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "RopeView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 23
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-RopeViewNode"
+  },
+  {
+    "__type__": "a31c5YcKi1a16DUFlHPyo1f",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 22
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "wreckPrefab": {
+      "__uuid__": "2e2133ca-6eb8-4daf-902d-a83bf5dcf803@5edba",
+      "__expectedType__": "cc.Prefab"
+    },
+    "_id": "salvage3d-RopeViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "PickupView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 25
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-PickupViewNode"
+  },
+  {
+    "__type__": "9a8acI3STBXpb/aFxZ5ozwY",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 24
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "_id": "salvage3d-PickupViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "GoalView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 27
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-GoalViewNode"
+  },
+  {
+    "__type__": "17b80hQUfle34qDof8Y8tNA",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 26
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "planePrefab": {
+      "__uuid__": "1884f7ad-de29-49e8-8aa0-ee3972612f79@e8ecb",
+      "__expectedType__": "cc.Prefab"
+    },
+    "_id": "salvage3d-GoalViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "DefenseView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 29
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-DefenseViewNode"
+  },
+  {
+    "__type__": "f30c6aAY9NcLY3aAgTQknMr",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 28
+    },
+    "_enabled": true,
+    "__prefab": null,
     "turretPrefab": {
       "__uuid__": "8a063811-df0b-40a4-aecf-849cda18e696@da893",
       "__expectedType__": "cc.Prefab"
     },
-    "_id": "salvage3d-gameComponent"
+    "soldierPrefab": {
+      "__uuid__": "24e398fe-68df-4fd6-a516-5ef94887eaef@79f50",
+      "__expectedType__": "cc.Prefab"
+    },
+    "enemyPrefab": {
+      "__uuid__": "28b163ae-71c0-4bbc-85bd-172c031b19e7@a8ceb",
+      "__expectedType__": "cc.Prefab"
+    },
+    "bossPrefab": {
+      "__uuid__": "0e0df7bf-f285-4264-b645-7aeaab8b9f9f@60c2a",
+      "__expectedType__": "cc.Prefab"
+    },
+    "enemyMoveClip": {
+      "__uuid__": "b8baa0ba-ba0a-4419-b4e8-55200651db10@7f3dc",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "enemyAttackClip": {
+      "__uuid__": "36d5f41f-8120-43ab-8c78-7811baa6f3bd@ca16a",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "enemyHitClip": {
+      "__uuid__": "d70406bb-8d48-4ba2-bc4e-8729a6011ce1@d2d2a",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "enemyDeathClip": {
+      "__uuid__": "20badf8a-bc2b-45c1-abd1-cf90c531f15c@b4251",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "enemyHeight": 1.45,
+    "bossHeight": 2.6,
+    "soldierHeight": 1.45,
+    "turretHeight": 1.6,
+    "_id": "salvage3d-DefenseViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "WorkerView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 31
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-WorkerViewNode"
+  },
+  {
+    "__type__": "acd85TU+u9f8p5WQTgbT1t6",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 30
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "workerPrefab": {
+      "__uuid__": "24e398fe-68df-4fd6-a516-5ef94887eaef@79f50",
+      "__expectedType__": "cc.Prefab"
+    },
+    "fitHeight": 1.55,
+    "_id": "salvage3d-WorkerViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "AvatarView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 33
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-AvatarViewNode"
+  },
+  {
+    "__type__": "32faawiS0ZTbLToUgN5EDYn",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 32
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "playerPrefab": {
+      "__uuid__": "6fe6377e-9821-497a-906f-8d4bd056402c@8af10",
+      "__expectedType__": "cc.Prefab"
+    },
+    "idleClip": {
+      "__uuid__": "fcace437-1260-4a13-a562-8c3f4d509ee1@cac3d",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "walkClip": {
+      "__uuid__": "6acce838-d9fe-400c-8fef-d6e8c18388aa@ff8f0",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "collectClip": {
+      "__uuid__": "6b302074-90b2-4f0b-9aec-eac3db865463@029b8",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "workClip": {
+      "__uuid__": "7b58ac5b-ba9e-4cc7-876e-0b7ccce9fbf1@5326f",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "meleeClip": {
+      "__uuid__": "33db5870-6d12-44b0-82d8-5c83f5007a42@d71a9",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "rangedClip": {
+      "__uuid__": "e86d851b-c4a5-42c3-8bb9-ce42c37b4c7d@9e9cb",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "depositClip": {
+      "__uuid__": "6b302074-90b2-4f0b-9aec-eac3db865463@029b8",
+      "__expectedType__": "cc.AnimationClip"
+    },
+    "fitHeight": 1.7,
+    "_id": "salvage3d-AvatarViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "GuideView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 35
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-GuideViewNode"
+  },
+  {
+    "__type__": "19796B1+ZxdhZXQ9Qkh1dki",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 34
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "_id": "salvage3d-GuideViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "AmmoUiView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 37
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-AmmoUiViewNode"
+  },
+  {
+    "__type__": "5f976kEsKpchYJ8X6aqCysx",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 36
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "_id": "salvage3d-AmmoUiViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "HudView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 39
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-HudViewNode"
+  },
+  {
+    "__type__": "a532cT/029axYDrImovvrr4",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 38
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "_id": "salvage3d-HudViewComponent"
+  },
+  {
+    "__type__": "cc.Node",
+    "_name": "EndCardView",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_parent": {
+      "__id__": 5
+    },
+    "_children": [],
+    "_active": true,
+    "_components": [
+      {
+        "__id__": 41
+      }
+    ],
+    "_prefab": null,
+    "_lpos": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_lrot": {
+      "__type__": "cc.Quat",
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "w": 1
+    },
+    "_lscale": {
+      "__type__": "cc.Vec3",
+      "x": 1,
+      "y": 1,
+      "z": 1
+    },
+    "_mobility": 0,
+    "_layer": 33554432,
+    "_euler": {
+      "__type__": "cc.Vec3",
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "_id": "salvage3d-EndCardViewNode"
+  },
+  {
+    "__type__": "b4137OZuVdft4ECnKD8a5EW",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 40
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "_id": "salvage3d-EndCardViewComponent"
   }
 ]

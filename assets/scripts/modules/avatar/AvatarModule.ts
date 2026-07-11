@@ -1,15 +1,28 @@
-import { Color, EventTouch, Node, Prefab, SkeletalAnimation, UITransform, instantiate, v3 } from 'cc';
+import { AnimationClip, Color, EventTouch, Node, Prefab, SkeletalAnimation, UITransform, instantiate, v3 } from 'cc';
 import { DESIGN_HEIGHT, DESIGN_WIDTH } from '../../common/Layout';
 import { createBox, createNode } from '../../common/PlaceholderFactory';
+import { FbxAnimator } from '../../common3d/FbxAnimator';
+import { fitModelHeight } from '../../common3d/ModelFit';
 import { createBox3D } from '../../common3d/Placeholder3D';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { AvatarSim } from './AvatarSim';
 
-// 主角视觉 + 虚拟摇杆输入 + 动画状态机。
+// 主角视觉 + 虚拟摇杆输入 + FBX 动画状态机。
 // 摇杆：按下出现、拖动移动、松手即停（操作归属在玩家）。
-// 动画：Sim 的感知状态（走/待机/采集/敲击/近战/远程/结算）映射到
-// FBX 剪辑名（config.animClips），用 SkeletalAnimation.crossFade 切换。
-// 背包：类型化道具按 kind 颜色堆在身后（金子金色、木材棕色）。
+// 动画：Sim 的感知状态（走/待机/采集/拉绳/近战/远程/结算）→ FbxAnimator，
+// 剪辑是真实的 AnimationClip 资产（AvatarView 组件的槽位拖入 01_主角 的 @剪辑）。
+// 背包：类型化道具按 kind 颜色堆在身后（金子金色、废料蓝灰）。
+
+/** 主角七个状态对应的剪辑槽位（哪个为空哪个状态就保持不动）。 */
+export interface AvatarClipSet {
+    readonly idle: AnimationClip | null;
+    readonly walk: AnimationClip | null;
+    readonly collect: AnimationClip | null;
+    readonly work: AnimationClip | null;
+    readonly melee: AnimationClip | null;
+    readonly ranged: AnimationClip | null;
+    readonly deposit: AnimationClip | null;
+}
 interface AvatarFxSegment {
     readonly node: Node;
     life: number;
@@ -33,8 +46,7 @@ export class AvatarModule implements PlayableModule {
     private uiTransform: UITransform | null = null;
     private root: Node | null = null;
     private model: Node | null = null;
-    private anim: SkeletalAnimation | null = null;
-    private currentClip = '';
+    private animator: FbxAnimator | null = null;
     private carryRoot: Node | null = null;
     private lastCarryKey = '';
     private inputLayer: Node | null = null;
@@ -52,7 +64,8 @@ export class AvatarModule implements PlayableModule {
     constructor(
         private readonly avatar: AvatarSim,
         private readonly avatarPrefab: Prefab | null,
-        private readonly animClips: Readonly<Record<string, string>>,
+        private readonly clips: AvatarClipSet,
+        private readonly fitHeight: number = 1.7,
     ) {}
 
     public start(context: ModuleContext): void {
@@ -66,8 +79,19 @@ export class AvatarModule implements PlayableModule {
             model.name = 'AvatarModel';
             model.setRotationFromEuler(0, 180, 0);
             root.addChild(model);
+            fitModelHeight(model, this.fitHeight);
             this.model = model;
-            this.anim = model.getComponentInChildren(SkeletalAnimation);
+            const anim = model.getComponentInChildren(SkeletalAnimation);
+            const animator = new FbxAnimator(anim);
+            animator.define('idle', { clip: this.clips.idle });
+            animator.define('walk', { clip: this.clips.walk });
+            animator.define('collect', { clip: this.clips.collect });
+            animator.define('work', { clip: this.clips.work });
+            animator.define('melee', { clip: this.clips.melee });
+            animator.define('ranged', { clip: this.clips.ranged });
+            animator.define('deposit', { clip: this.clips.deposit });
+            animator.set('idle');
+            this.animator = animator;
         } else {
             createBox3D('Body', root, 0, 0.45, 0, 0.5, 0.9, 0.42, BODY);
             createBox3D('Head', root, 0, 1.12, 0, 0.34, 0.34, 0.34, HEAD);
@@ -106,7 +130,7 @@ export class AvatarModule implements PlayableModule {
             this.model.setRotationFromEuler(0, yaw + 180, 0);
         }
         this.syncCarryStack();
-        this.syncAnimation();
+        this.syncAnimation(deltaTime);
 
         for (let i = this.fx.length - 1; i >= 0; i -= 1) {
             const segment = this.fx[i];
@@ -146,21 +170,14 @@ export class AvatarModule implements PlayableModule {
         });
     }
 
-    // 状态 → 剪辑名 → crossFade；占位盒子没有动画组件时自动跳过。
-    private syncAnimation(): void {
-        if (!this.anim) {
+    // Sim 状态 → 动画状态机；占位盒子没有动画组件时自动跳过。
+    private syncAnimation(deltaTime: number): void {
+        if (!this.animator) {
             return;
         }
         const state = this.avatar.moving ? 'walk' : this.avatar.mode;
-        const clip = this.animClips[state] ?? this.animClips.idle;
-        if (!clip || clip === this.currentClip) {
-            return;
-        }
-        if (!this.anim.getState(clip)) {
-            return;
-        }
-        this.anim.crossFade(clip, 0.15);
-        this.currentClip = clip;
+        this.animator.set(this.animator.has(state) ? state : 'idle');
+        this.animator.tick(deltaTime);
     }
 
     private spawnBeam(fire: { fromX: number; fromZ: number; toX: number; toZ: number }, color: Color, height: number): void {

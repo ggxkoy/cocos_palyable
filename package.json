@@ -9,6 +9,7 @@
   "description": "Cocos Creator 3.8 playable rebuilds: gold rush slice plus tower-defense slice.",
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "lint:scenes": "node tools/scene-lint.mjs",
     "serve": "npx http-server . -p 4173",
     "planner:start": "node planner-web/server.mjs"
   },

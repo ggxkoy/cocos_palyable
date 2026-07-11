@@ -1,5 +1,6 @@
 import { Color, Material, MeshRenderer, Node, Prefab, instantiate } from 'cc';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
+import { fitModelHeight } from '../../common3d/ModelFit';
 import { createBox3D } from '../../common3d/Placeholder3D';
 
 // 场地模块：三屏大地面、泥潭带（不可通行，靠绳子够）、防线带、回收站。
@@ -49,6 +50,7 @@ export class StageModule implements PlayableModule {
             depotNode.name = 'Depot';
             depotNode.setPosition(depot.x, 0, depot.z);
             world.addChild(depotNode);
+            fitModelHeight(depotNode, 1.9);
         } else {
             const depotNode = createBox3D('Depot', world, depot.x, 0.45, depot.z, 2.2, 0.9, 1.4, DEPOT);
             createBox3D('DepotStack', depotNode, 0, 0.62, 0, 1.6, 0.35, 0.9, DEPOT_TOP);

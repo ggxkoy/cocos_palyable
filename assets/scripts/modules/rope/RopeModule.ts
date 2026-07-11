@@ -1,4 +1,5 @@
 import { Color, Node, Prefab, instantiate } from 'cc';
+import { fitModelHeight } from '../../common3d/ModelFit';
 import { createBox3D, setBoxColor } from '../../common3d/Placeholder3D';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { RopeSim, RopeWreck } from './RopeSim';
@@ -43,8 +44,10 @@ export class RopeModule implements PlayableModule {
                 node = instantiate(this.wreckPrefab);
                 node.name = `Wreck-T${wreck.tier}-${wreck.id}`;
                 node.setPosition(wreck.x, 0.05, wreck.z);
-                node.setScale(0.7 + wreck.tier * 0.35, 0.7 + wreck.tier * 0.35, 0.7 + wreck.tier * 0.35);
                 context.world.addChild(node);
+                // 等级越高的残骸越大（自适应到目标高度，源模型比例不可控）。
+                fitModelHeight(node, 0.35 + wreck.tier * 0.3);
+                node.setRotationFromEuler(0, (wreck.id * 53) % 180, 0);
             } else {
                 node = createBox3D(`Wreck-T${wreck.tier}-${wreck.id}`, context.world, wreck.x, 0.08, wreck.z, size.w, size.h, size.l, WRECK_TINT[wreck.tier]);
                 node.setRotationFromEuler(0, (wreck.id * 53) % 180, -8);

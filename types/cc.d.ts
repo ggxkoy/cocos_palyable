@@ -86,6 +86,7 @@ declare module 'cc' {
     public addComponent<T extends Component>(classConstructor: new (...args: never[]) => T): T;
     public getComponent<T extends Component>(classConstructor: new (...args: never[]) => T): T | null;
     public getComponentInChildren<T extends Component>(classConstructor: new (...args: never[]) => T): T | null;
+    public getComponentsInChildren<T extends Component>(classConstructor: new (...args: never[]) => T): T[];
     public on(event: string, callback: (...args: never[]) => void, target?: unknown): void;
     public off(event: string, callback?: (...args: never[]) => void, target?: unknown): void;
   }
@@ -148,9 +149,17 @@ declare module 'cc' {
     public packable: boolean;
   }
 
-  export class Mesh {}
+  export class Mesh {
+    public readonly struct: {
+      readonly minPosition?: Vec3;
+      readonly maxPosition?: Vec3;
+    };
+  }
 
   export class Prefab {}
+
+  export const CCFloat: unknown;
+  export const CCInteger: unknown;
 
   export function instantiate(prefab: Prefab): Node;
 
@@ -179,14 +188,28 @@ declare module 'cc' {
 
   export class DirectionalLight extends Component {}
 
+  export class AnimationClip {
+    public name: string;
+    public readonly duration: number;
+    public wrapMode: number;
+  }
+
   export class AnimationState {
     public readonly name: string;
+    public wrapMode: number;
+    public speed: number;
+    public time: number;
+    public setTime(time: number): void;
+    public sample(): void;
   }
 
   export class SkeletalAnimation extends Component {
+    public clips: (AnimationClip | null)[];
+    public defaultClip: AnimationClip | null;
     public play(name?: string): void;
     public crossFade(name: string, duration?: number): void;
     public getState(name: string): AnimationState | null;
+    public createState(clip: AnimationClip, name?: string): AnimationState;
   }
 
   export class Camera extends Component {
@@ -205,6 +228,7 @@ declare module 'cc' {
     public clearFlags: number;
     public clearColor: Color;
     public screenPointToRay(x: number, y: number, out?: geometry.Ray): geometry.Ray;
+    public convertToUINode(worldPos: Vec3, uiNode: Node, out?: Vec3): Vec3;
   }
 
   export class Director {

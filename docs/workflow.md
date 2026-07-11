@@ -66,11 +66,19 @@ BehaviorTree（Sequence/Selector/Condition/Action/Repeat，驱动自主人物：
   workers（行为树雇员，JobProvider 大脑）、goalchain(目标链+非线性驻留购买+
   requirement 门槛+fail/revive)、defense（敌潮+实体子弹炮塔+围墙耐久+攻墙/击破）、
   camera（等距跟随相机+灯光）、stage（三屏大地图+泥潭带）、guide（3D 定向引导）、
-  hud（2D 叠加）、endcard（胜利/失败结算+复活重试+CTA）。
-- **拼一个新 playable** = `assets/scripts/playables/<名>/` 三个文件：
+  ammoui（炮塔弹药牌+兑换/金币飘字，世界坐标投影到 UI）、hud（2D 叠加）、
+  endcard（胜利/失败结算+复活重试+CTA）。
+- **拼一个新 playable** = `assets/scripts/playables/<名>/`：
   Config（纯配置：世界坐标、经济、文案、CTA）、Sim（createXxxSim：挑纯逻辑模块、
-  注入依赖、总线接线）、Game（cc 组件：挑视觉模块清单、逐个 start/tick）
-  ＋ 复制一个场景骨架注册到 TemplateBootstrap。
+  注入依赖、总线接线）、Game 宿主（sim + 共享上下文 + 模块注册表 + 主循环）
+  ＋ `views/` 每个功能一个薄 View 组件（cc 组件，@property 美术槽位，场景里
+  一节点一组件——改主角外观只动 AvatarView，改防线只动 DefenseView，互不牵扯）
+  ＋ 复制一个场景骨架注册到 TemplateBootstrap。场景 JSON 可直接按 uuid 预接
+  prefab/AnimationClip（FBX 子资产 uuid 见 .fbx.meta 的 subMetas）。
+- **FBX 动画状态机**：`common3d/FbxAnimator.ts`——整剪辑状态（@idle1/@walk1 这类
+  独立剪辑文件）与帧段状态（单条 Take 001 按帧号 from/to 切段，对应美术给的
+  帧数说明 txt）统一成「状态名 → 播放行为」，视觉模块只报状态名。
+  模型实例化后用 `common3d/ModelFit.ts` 按包围盒自适应目标高度，保证可见。
 - 首个成品：`playables/salvage3d/`（废土打捞防线 3D 版），场景 `salvage3d.scene`。
 - 3D 场景无需手写相机/灯光进 JSON：沿用 2D 场景骨架，相机、平行光、全部 3D
   节点均由 CameraRigModule / 各模块在运行时创建。
@@ -78,8 +86,10 @@ BehaviorTree（Sequence/Selector/Condition/Action/Repeat，驱动自主人物：
 ## 验证手段（无编辑器环境可用）
 
 - `npm run typecheck` —— 全部脚本 strict 检查（types/cc.d.ts stub）
-- 场景 lint —— node 校验 scene JSON 引用完整性
-- Model 冒烟 —— tsc 编译到 temp/ 后用 node 驱动状态机走全流程
+- `npm run lint:scenes` —— 校验 scene JSON：__id__ 引用、资产 __uuid__（含 FBX
+  子资产）真实存在、自定义组件压缩 uuid 有对应脚本 meta
+- Model 冒烟 —— tsc 编译到 temp/ 后用 node 驱动状态机走全流程（FbxAnimator
+  可用 mock 的 cc 模块单测帧段/循环/一次性逻辑）
 
 ## 新增玩法模板的方法
 

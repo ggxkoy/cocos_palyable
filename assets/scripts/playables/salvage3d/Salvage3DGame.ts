@@ -1,113 +1,48 @@
-import { _decorator, Camera, Component, Material, Node, Prefab, director } from 'cc';
+import { _decorator, Camera, Component, Node, director } from 'cc';
 import { installAdEventListeners } from '../../common/PlayableSdk';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
-import { AvatarModule } from '../../modules/avatar/AvatarModule';
 import { CameraRigModule } from '../../modules/camera/CameraRigModule';
-import { DefenseModule } from '../../modules/defense/DefenseModule';
-import { EndCardModule } from '../../modules/endcard/EndCardModule';
-import { GoalChainModule } from '../../modules/goalchain/GoalChainModule';
-import { GuideModule } from '../../modules/guide/GuideModule';
-import { HudModule } from '../../modules/hud/HudModule';
-import { PickupModule } from '../../modules/pickups/PickupModule';
-import { RopeModule } from '../../modules/rope/RopeModule';
-import { StageModule } from '../../modules/stage/StageModule';
-import { WorkerCrewModule } from '../../modules/workers/WorkerCrewModule';
-import { SALVAGE3D_CONFIG } from './Salvage3DConfig';
-import { createSalvageSim } from './SalvageSim';
+import { SALVAGE3D_CONFIG, Salvage3DConfig } from './Salvage3DConfig';
+import { SalvageSim, createSalvageSim } from './SalvageSim';
 
-const { ccclass, property } = _decorator;
+const { ccclass } = _decorator;
 
-// 3D 模块化拼装示例：一份配置（Salvage3DConfig）+ 一张模块清单。
-// 拼接新 playable 时替换配置与清单即可，模块本体不改。
+// 拼装宿主：只负责 sim + 共享上下文 + 模块注册表 + 主循环。
+// 所有视觉与美术槽位拆进 views/ 下的独立 View 组件（场景里每个一个节点），
+// 改某一块的表现只动对应组件，互不牵扯；模块之间也只通过事件总线通信。
 @ccclass('Salvage3DGame')
 export class Salvage3DGame extends Component {
-    // 美术槽位与 assets/art/salvage3d/incoming/ 的编号目录一一对应，
-    // 留空即用占位盒子：01→player、02→wreck、03→plane、04→depot、
-    // 05→turret、06→enemy、07→groundMaterial（做成 Material 拖入）。
-    @property(Prefab)
-    private playerPrefab: Prefab | null = null;
+    public readonly config: Salvage3DConfig = SALVAGE3D_CONFIG;
+    public readonly sim: SalvageSim = createSalvageSim(SALVAGE3D_CONFIG);
 
-    @property(Prefab)
-    private workerPrefab: Prefab | null = null;
-
-    @property(Prefab)
-    private wreckPrefab: Prefab | null = null;
-
-    @property(Prefab)
-    private planePrefab: Prefab | null = null;
-
-    @property(Prefab)
-    private depotPrefab: Prefab | null = null;
-
-    @property(Prefab)
-    private turretPrefab: Prefab | null = null;
-
-    @property(Prefab)
-    private enemyPrefab: Prefab | null = null;
-
-    @property(Prefab)
-    private bossPrefab: Prefab | null = null;
-
-    @property(Prefab)
-    private turretSoldierPrefab: Prefab | null = null;
-
-    @property(Material)
-    private groundMaterial: Material | null = null;
-
-    private readonly sim = createSalvageSim(SALVAGE3D_CONFIG);
-    private modules: PlayableModule[] = [];
+    private context: ModuleContext | null = null;
+    private readonly modules: PlayableModule[] = [];
     private elapsed = 0;
 
     protected onLoad(): void {
         installAdEventListeners();
-        const config = SALVAGE3D_CONFIG;
-
         const scene = director.getScene();
         const world = new Node('World3D');
         scene?.addChild(world);
 
         const uiCamera = this.node.parent?.getChildByName('Camera')?.getComponent(Camera) ?? null;
-
-        const context: ModuleContext = {
+        this.context = {
             world,
             ui: this.node,
             bus: this.sim.bus,
             camera3d: null,
         };
+        // 相机/灯光是所有视觉的前提，宿主先建；其余模块由各 View 组件注册。
+        this.addModule(new CameraRigModule(this.config.camera, uiCamera, () => ({ x: this.sim.avatar.x, z: this.sim.avatar.z })));
+    }
 
-        this.modules = [
-            new CameraRigModule(config.camera, uiCamera, () => ({ x: this.sim.avatar.x, z: this.sim.avatar.z })),
-            new StageModule({
-                ground: config.world.ground,
-                swamp: config.world.swamp,
-                depot: config.world.depot,
-                hordeLineZ: config.world.hordeLineZ,
-            }, this.depotPrefab, this.groundMaterial),
-            new RopeModule(this.sim.rope, this.wreckPrefab),
-            new PickupModule(this.sim.pickups),
-            new GoalChainModule(this.sim.goal, this.sim.economy, config.world.vault, this.planePrefab),
-            new DefenseModule(
-                this.sim.defense,
-                config.world.turrets,
-                config.defense.deathTime,
-                config.defense.enemyAnimClips,
-                this.turretPrefab,
-                this.enemyPrefab,
-                this.turretSoldierPrefab,
-                this.bossPrefab,
-                { z: config.world.hordeLineZ, width: config.world.ground.width },
-            ),
-            new WorkerCrewModule(this.sim.workers, config.capacity, this.workerPrefab),
-            new AvatarModule(this.sim.avatar, this.playerPrefab, config.animClips),
-            new GuideModule(this.sim.goal, this.sim.avatar, this.sim.rope, this.sim.pickups, config.world.depot, config.capacity),
-            new HudModule(config.texts, this.sim.economy, this.sim.goal, config.defense.ammoCap),
-            // 复活重试：修墙+击退现存敌人（reviveWall 由 goal:revive 事件驱动）。
-            new EndCardModule(config.texts, config.ctaUrl, () => this.sim.goal.revive(), () => this.sim.goal.retriesLeft > 0),
-        ];
-
-        for (const module of this.modules) {
-            module.start(context);
+    // View 组件在自己的 start() 里调用（宿主在父节点，onLoad 先于子节点组件执行）。
+    public addModule(module: PlayableModule): void {
+        if (!this.context) {
+            return;
         }
+        this.modules.push(module);
+        module.start(this.context);
     }
 
     protected update(deltaTime: number): void {

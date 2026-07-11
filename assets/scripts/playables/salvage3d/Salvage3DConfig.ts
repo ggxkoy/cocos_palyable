@@ -96,16 +96,8 @@ export const SALVAGE3D_CONFIG = {
         attackInterval: 0.4,
         attackDamage: 1,
     },
-    // 动画状态机 → FBX 剪辑名映射（01_主角；名字按编辑器导入结果调整）。
-    animClips: {
-        idle: 'idle1',
-        walk: 'walk1',
-        collect: 'idle2',
-        work: 'idle3',
-        melee: 'idle4',
-        ranged: 'talk',
-        deposit: 'idle2',
-    } as Record<string, string>,
+    // 动画剪辑不在配置里写名字：真实 AnimationClip 资产由 views/ 下
+    // 各 View 组件的槽位拖入（场景已按 UUID 预接好 01/06 的剪辑）。
     defense: {
         enemyCount: 18,
         enemySpeed: 2.2,
@@ -116,7 +108,6 @@ export const SALVAGE3D_CONFIG = {
         fireInterval: 0.12,
         bulletSpeed: 14,
         deathTime: 1.1,
-        enemyAnimClips: { move: 'walk', hit: 'hit', death: 'death' } as Record<string, string>,
         trickleInterval: 5.5,
         trickleCount: 3,
         ammoCap: 80,

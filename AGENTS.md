@@ -15,8 +15,9 @@
 
 ## 验证命令（无编辑器环境，必须全绿）
 
-- `npm run typecheck` —— 唯一的静态验证手段，改完代码必跑
-- 场景 JSON lint 与各模板 Model 冒烟测试：写法参考 git 历史中的 node 内联脚本
+- `npm run typecheck` —— 静态验证，改完代码必跑
+- `npm run lint:scenes` —— 场景 JSON 校验（引用完整性 + 资产 uuid + 组件脚本 meta）
+- 各模板 Model/Sim 冒烟测试：tsc 编译到 temp/smoke 后 node 驱动（写法参考 git 历史）
   （tsc 编译到 temp/smoke 再用 node 驱动状态机，用完删除；temp/ 已 gitignore）
 
 ## 约定
@@ -33,6 +34,8 @@
 - **3D 模块层**（新 playable 优先）：功能模块在 `assets/scripts/modules/<名>/`，
   一律 Sim（纯逻辑，禁止 import 'cc'）+ Module（视觉）两文件；模块间只通过
   framework/EventBus 和构造注入通信。拼新 playable = `playables/<名>/` 下
-  Config + createSim 接线 + Game 模块清单，场景复制骨架后在 TemplateBootstrap 注册。
+  Config + createSim 接线 + Game 宿主 + views/ 下每功能一个 View 组件（@property
+  美术槽位；FBX 动画走 common3d/FbxAnimator 状态机），场景复制骨架后在
+  TemplateBootstrap 注册。
   3D 占位用 `common3d/Placeholder3D.ts`，相机/灯光由 CameraRigModule 运行时创建。
 - 不要手写 .meta、不要提交 library/ temp/ build/ 等编辑器生成目录。

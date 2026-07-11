@@ -1,4 +1,5 @@
 import { Color, Node, Prefab, instantiate } from 'cc';
+import { fitModelHeight } from '../../common3d/ModelFit';
 import { createBox3D, setBoxColor } from '../../common3d/Placeholder3D';
 import { ModuleContext, PlayableModule } from '../../framework/Module';
 import { EconomySim } from '../economy/EconomySim';
@@ -36,7 +37,9 @@ export class GoalChainModule implements PlayableModule {
             vault.name = 'PlaneWreck';
             vault.setPosition(this.vaultPos.x, 0, this.vaultPos.z);
             context.world.addChild(vault);
-            const lock = createBox3D('WreckLock', vault, 0, 2.0, 0, 0.4, 0.55, 0.4, LOCK);
+            // 终极目标要够大（长期锚点第一帧就得看见）。
+            fitModelHeight(vault, 2.4);
+            const lock = createBox3D('WreckLock', context.world, this.vaultPos.x, 2.9, this.vaultPos.z, 0.4, 0.55, 0.4, LOCK);
             this.vaultBody = vault;
             this.vaultLock = lock;
         } else {
