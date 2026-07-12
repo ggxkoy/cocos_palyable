@@ -72,6 +72,7 @@ declare module 'cc' {
     public angle: number;
     public parent: Node | null;
     public readonly children: Node[];
+    public readonly components: Component[];
     public addChild(child: Node): void;
     public removeFromParent(): void;
     public destroy(): boolean;
@@ -161,6 +162,7 @@ declare module 'cc' {
 
   export const CCFloat: unknown;
   export const CCInteger: unknown;
+  export const CCBoolean: unknown;
 
   export function instantiate(prefab: Prefab): Node;
 
