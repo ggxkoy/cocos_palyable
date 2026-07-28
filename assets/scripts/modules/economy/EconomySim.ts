@@ -1,8 +1,7 @@
 // 经济模块（纯逻辑）——双货币：
-// 弹药：废料入库兑换（等级越高的废料换的子弹越多），防御射击按发消耗；
+// 弹药：主角把子弹包背到炮塔交付才入池（supplyAmmo），防御射击按发消耗；
 // 金币：只来自杀敌掉落（拾取即入账），用于雇佣与升级绳子。
 export interface EconomyConfig {
-    readonly ammoByKind: Readonly<Record<string, number>>;
     readonly ammoCap: number;
     readonly coinValue: number;
 }
@@ -13,13 +12,10 @@ export class EconomySim {
 
     constructor(private readonly config: EconomyConfig) {}
 
-    // 一背包废料换弹药，返回换得的弹药数（不产金币）。
-    public depositLoad(load: ReadonlyArray<string>): number {
-        let gained = 0;
-        for (const kind of load) {
-            gained += this.config.ammoByKind[kind] ?? 1;
-        }
-        this.ammo = Math.min(this.config.ammoCap, this.ammo + gained);
+    // 子弹包送达炮塔：入弹池，返回实际入账数（有弹容上限）。
+    public supplyAmmo(amount: number): number {
+        const gained = Math.min(amount, this.config.ammoCap - this.ammo);
+        this.ammo += gained;
         return gained;
     }
 

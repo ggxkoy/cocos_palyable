@@ -23,6 +23,7 @@ export class StageView extends Component {
             ground: world.ground,
             swamp: world.swamp,
             depot: world.depot,
+            output: host.config.depot.output,
             hordeLineZ: world.hordeLineZ,
         }, this.depotPrefab, this.groundMaterial));
     }

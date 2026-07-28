@@ -17,7 +17,9 @@ export class GuideView extends Component {
             host.sim.avatar,
             host.sim.rope,
             host.sim.pickups,
+            host.sim.economy,
             host.config.world.depot,
+            host.config.world.turrets,
             host.config.capacity,
         ));
     }

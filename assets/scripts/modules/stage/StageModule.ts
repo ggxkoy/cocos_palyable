@@ -8,6 +8,8 @@ export interface StageConfig {
     readonly ground: { readonly width: number; readonly length: number };
     readonly swamp: { readonly shoreZ: number; readonly centerZ: number; readonly length: number };
     readonly depot: { readonly x: number; readonly z: number };
+    /** 回收机出料口（子弹包堆在这儿等主角搬去前线）。 */
+    readonly output: { readonly x: number; readonly z: number };
     readonly hordeLineZ: number;
 }
 
@@ -17,6 +19,8 @@ const SHORE = new Color(150, 128, 92, 255);
 const LINE = new Color(120, 96, 70, 255);
 const DEPOT = new Color(70, 96, 150, 255);
 const DEPOT_TOP = new Color(255, 200, 80, 255);
+const BELT = new Color(58, 66, 78, 255);
+const OUTPUT_PAD = new Color(214, 168, 58, 255);
 
 export class StageModule implements PlayableModule {
     constructor(
@@ -55,5 +59,12 @@ export class StageModule implements PlayableModule {
             const depotNode = createBox3D('Depot', world, depot.x, 0.45, depot.z, 2.2, 0.9, 1.4, DEPOT);
             createBox3D('DepotStack', depotNode, 0, 0.62, 0, 1.6, 0.35, 0.9, DEPOT_TOP);
         }
+
+        // 出料传送带 + 出料台：从回收机指向防线方向，
+        // 让「废料进机器 → 子弹包在这儿出来 → 背去前线」这条线一眼看懂。
+        const output = this.config.output;
+        const beltLength = Math.max(0.6, output.z - depot.z);
+        createBox3D('OutputBelt', world, output.x, 0.12, (depot.z + output.z) / 2, 1.0, 0.16, beltLength, BELT);
+        createBox3D('OutputPad', world, output.x, 0.06, output.z, 1.9, 0.1, 1.6, OUTPUT_PAD);
     }
 }

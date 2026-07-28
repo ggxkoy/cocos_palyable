@@ -1,5 +1,6 @@
 import { Action, BtNode, BtStatus, Condition, Repeat, Selector, Sequence } from '../../common/BehaviorTree';
 import { EventBus } from '../../framework/EventBus';
+import { ScrapIntake } from '../avatar/AvatarSim';
 import { EconomySim } from '../economy/EconomySim';
 import { PickupSim } from '../pickups/PickupSim';
 import { JobProvider } from '../work/JobProvider';
@@ -7,6 +8,8 @@ import { JobProvider } from '../work/JobProvider';
 // 雇员模块（纯逻辑）：玩家购买获得的自动化。行为树大脑对接通用作业接口
 // （打捞绳/矿脉都可以）：满载回投 → 找活干（接近→持续作业）→
 // 有货无活先回投 → 向作业区集结。金币掉落顺路也捡（直接入账）。
+// 分工：雇员只跑废料线（捞→卸进回收机）；子弹包（'ammo*'）不碰——
+// 前线补给是主角的活。
 export interface WorkerCrewConfig {
     readonly spawn: { readonly x: number; readonly z: number };
     readonly depot: { readonly x: number; readonly z: number };
@@ -46,6 +49,7 @@ export class WorkerCrewSim {
         private readonly job: JobProvider,
         private readonly pickups: PickupSim,
         private readonly economy: EconomySim,
+        private readonly depot: ScrapIntake,
         private readonly bus: EventBus,
     ) {}
 
@@ -67,14 +71,14 @@ export class WorkerCrewSim {
 
     public tick(deltaTime: number): void {
         for (const worker of this.workers) {
-            // 范围自动拾取：金币直接入账，废料背上。
+            // 范围自动拾取：金币直接入账，废料背上；子弹包留给主角搬。
             const pickup = this.pickups.nearestAlive(worker.x, worker.z, this.config.pickupRange);
             if (pickup) {
                 if (pickup.kind === 'gold') {
                     this.pickups.collect(pickup);
                     const value = this.economy.collectCoin();
                     this.bus.emit('fx:coin', { x: pickup.x, z: pickup.z, value });
-                } else if (worker.carried.length < this.config.capacity) {
+                } else if (pickup.kind.indexOf('ammo') !== 0 && worker.carried.length < this.config.capacity) {
                     worker.carried.push(this.pickups.collect(pickup));
                 }
             }
@@ -162,9 +166,9 @@ export class WorkerCrewSim {
             return BtStatus.Running;
         }
         worker.actionTimer = 0;
-        const ammo = this.economy.depositLoad(worker.carried);
+        const accepted = this.depot.enqueue(worker.carried);
         worker.carried.length = 0;
-        this.bus.emit('fx:deposit', { x: worker.x, z: worker.z, amount: ammo });
+        this.bus.emit('fx:deposit', { x: worker.x, z: worker.z, count: accepted });
         worker.task = 'rally';
         return BtStatus.Success;
     }

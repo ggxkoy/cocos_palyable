@@ -33,6 +33,12 @@ const HEAD = new Color(240, 205, 165, 255);
 const KIND_COLORS: Record<string, Color> = {
     gold: new Color(247, 183, 49, 255),
     wood: new Color(140, 96, 54, 255),
+    scrap1: new Color(130, 148, 172, 255),
+    scrap2: new Color(122, 168, 212, 255),
+    scrap3: new Color(140, 196, 255, 255),
+    ammo1: new Color(255, 214, 96, 255),
+    ammo2: new Color(255, 196, 60, 255),
+    ammo3: new Color(255, 170, 30, 255),
 };
 const KIND_FALLBACK = new Color(170, 170, 170, 255);
 const SHOT = new Color(255, 236, 120, 255);

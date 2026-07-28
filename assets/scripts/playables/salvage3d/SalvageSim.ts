@@ -1,6 +1,7 @@
 import { EventBus } from '../../framework/EventBus';
 import { AvatarSim } from '../../modules/avatar/AvatarSim';
 import { DefenseSim } from '../../modules/defense/DefenseSim';
+import { DepotSim } from '../../modules/depot/DepotSim';
 import { EconomySim } from '../../modules/economy/EconomySim';
 import { GoalChainSim } from '../../modules/goalchain/GoalChainSim';
 import { PickupSim } from '../../modules/pickups/PickupSim';
@@ -15,6 +16,7 @@ export interface SalvageSim {
     readonly economy: EconomySim;
     readonly rope: RopeSim;
     readonly pickups: PickupSim;
+    readonly depot: DepotSim;
     readonly avatar: AvatarSim;
     readonly workers: WorkerCrewSim;
     readonly goal: GoalChainSim;
@@ -27,7 +29,6 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
     const world = config.world;
 
     const economy = new EconomySim({
-        ammoByKind: config.pickups.ammoByKind,
         ammoCap: config.defense.ammoCap,
         coinValue: config.pickups.coinValue,
     });
@@ -40,6 +41,14 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
     }, bus);
 
     const pickups = new PickupSim();
+
+    // 回收机：废料 → 子弹包实体（堆在出料口，主角搬去炮塔）。
+    const depot = new DepotSim({
+        output: config.depot.output,
+        convertInterval: config.depot.convertInterval,
+        pileCap: config.depot.pileCap,
+        scrapToPack: config.depot.scrapToPack,
+    }, pickups, bus);
 
     const defense = new DefenseSim({
         turrets: world.turrets,
@@ -63,6 +72,9 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
     const avatar = new AvatarSim({
         spawn: world.avatarSpawn,
         depot: world.depot,
+        supplyPoints: world.turrets,
+        supplyRange: config.supplyRange,
+        packValues: config.depot.packValues,
         speed: config.avatarSpeed,
         capacity: config.capacity,
         depositTime: config.depositTime,
@@ -79,7 +91,7 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
             minZ: world.swamp.shoreZ + 0.1,
             maxZ: world.ground.length / 2 - 0.4,
         },
-    }, rope, pickups, defense, economy, bus);
+    }, rope, pickups, defense, economy, depot, bus);
 
     const workers = new WorkerCrewSim({
         spawn: world.avatarSpawn,
@@ -91,7 +103,7 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
         workSearchRange: config.workSearchRange,
         detectRange: config.detectRange,
         pickupRange: config.pickups.pickupRange,
-    }, rope, pickups, economy, bus);
+    }, rope, pickups, economy, depot, bus);
 
     const goal = new GoalChainSim({
         purchases: config.purchases,
@@ -115,9 +127,15 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
     });
     bus.on('goal:hire', () => workers.hire());
     bus.on('goal:unlock', () => rope.upgrade());
+    bus.on('goal:vault', () => {
+        // 大飞机是军火库：捞起来那一刻，机上弹药直接并入防线。
+        const gained = economy.supplyAmmo(config.vaultAmmoPayload);
+        const turret = world.turrets[0];
+        bus.emit('fx:supply', { x: turret.x, z: turret.z, amount: gained });
+    });
     let trickleStarted = false;
-    bus.on('fx:deposit', () => {
-        // 第一次换到弹药，防线有了火力——丧尸压力随之而来。
+    bus.on('fx:supply', () => {
+        // 第一批子弹送达炮塔，防线有了火力——丧尸压力随之而来。
         if (!trickleStarted && !goal.vaultOpened) {
             trickleStarted = true;
             defense.startTrickle();
@@ -138,6 +156,7 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
         economy,
         rope,
         pickups,
+        depot,
         avatar,
         workers,
         goal,
@@ -146,6 +165,7 @@ export function createSalvageSim(config: Salvage3DConfig = SALVAGE3D_CONFIG): Sa
             avatar.tick(deltaTime);
             workers.tick(deltaTime);
             rope.tick(deltaTime);
+            depot.tick(deltaTime);
             goal.tick(deltaTime);
             defense.tick(deltaTime);
         },

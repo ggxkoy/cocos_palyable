@@ -59,7 +59,8 @@ BehaviorTree（Sequence/Selector/Condition/Action/Repeat，驱动自主人物：
   （MeshRenderer + builtin-standard），3D 版占位资产；换美术=换模型 prefab。
 - `assets/scripts/modules/<名>/` —— 每个玩法功能一个模块，**Sim（纯逻辑，
   node 可冒烟）+ Module（cc 视觉）** 两个文件。现有模块：
-  economy（双货币：废料→弹药兑换、金币只来自杀敌）、work/JobProvider（通用作业接口，
+  economy（双货币：子弹包送达才入弹池、金币只来自杀敌）、depot（回收机：废料排队
+  加工成子弹包实体，堆满停机）、work/JobProvider（通用作业接口，
   主角与雇员对接任何作业源）、rope（打捞绳：分级残骸+绳长/质量等级+持续拉拽作业）、
   harvest（矿脉/残骸+重生，JobProvider 的另一种实现）、pickups（类型化掉落物）、
   avatar（虚拟摇杆主角+感知状态机：金币入账/废料背身/敌人近战远程/范围自动作业）、

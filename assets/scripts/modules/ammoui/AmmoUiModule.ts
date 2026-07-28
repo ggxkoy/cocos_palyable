@@ -6,13 +6,14 @@ import { EconomySim } from '../economy/EconomySim';
 // 弹药可视化层（2D 叠加，跟随 3D 投影）：
 // - 每座机枪塔头顶一块弹药牌：当前弹药数 + 比例条；开火脉冲放大，
 //   打空变红闪 "NO AMMO"——弹药状态一眼可见。
-// - 兑换飘字：回收站换到弹药时 "+N AMMO" 从回收站上方升起淡出，
-//   捡金币时 "+N" 金字飘起——废料→子弹的转化看得见。
+// - 补给线飘字：废料卸进回收机 "+N SCRAP"；子弹包送达炮塔 "+N AMMO"；
+//   捡金币 "+N" 金字——搬运的每一程都有反馈。
 const BADGE_BG = new Color(10, 20, 24, 215);
 const BADGE_LINE = new Color(73, 214, 183, 255);
 const AMMO_TEXT = new Color(158, 255, 228, 255);
 const EMPTY_TEXT = new Color(255, 96, 70, 255);
 const FLOAT_AMMO = new Color(94, 234, 190, 255);
+const FLOAT_SCRAP = new Color(150, 190, 235, 255);
 const FLOAT_GOLD = new Color(255, 214, 92, 255);
 
 const FLOAT_LIFE = 1.15;
@@ -77,8 +78,15 @@ export class AmmoUiModule implements PlayableModule {
             }
         });
         context.bus.on('fx:deposit', payload => {
-            const deposit = payload as { x: number; z: number; amount: number };
-            this.spawnFloat(`+${deposit.amount} AMMO`, FLOAT_AMMO, deposit.x, deposit.z);
+            const deposit = payload as { x: number; z: number; count: number };
+            this.spawnFloat(`+${deposit.count} SCRAP`, FLOAT_SCRAP, deposit.x, deposit.z);
+        });
+        context.bus.on('fx:supply', payload => {
+            const supply = payload as { x: number; z: number; amount: number };
+            this.spawnFloat(`+${supply.amount} AMMO`, FLOAT_AMMO, supply.x, supply.z);
+            for (const badge of this.badges) {
+                badge.pulse = PULSE_TIME;
+            }
         });
         context.bus.on('fx:coin', payload => {
             const coin = payload as { x: number; z: number; value: number };

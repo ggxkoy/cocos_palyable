@@ -2,10 +2,11 @@
 // 世界坐标为米（XZ 平面，+x 右，-z 远/画面上方），相机等距斜视并跟随主角。
 // 大地图分三屏：北=泥潭打捞区（绳子够不着的深处沉着大件），中=回收转换区，南=丧尸防线。
 //
-// 核心经济循环（拉绳打捞版）：
-//   拉绳捞残骸 → 回收站【废料换子弹】（等级越高的废料换的子弹越多）
-//   → 炮塔杀丧尸 →【只有杀敌掉金币】→ 金币升级绳子（长度+质量）
-//   → 够得着更深处更高级的残骸 → 更多子弹 → 杀更多敌 → …
+// 核心经济循环（拉绳打捞 + 实体补给线）：
+//   拉绳捞残骸 → 回收机把废料加工成【子弹包实体】堆在出料口
+//   → 主角背上子弹包送到前线炮塔（入弹池）→ 炮塔杀丧尸
+//   →【只有杀敌掉金币】→ 金币升级绳子（长度+质量）
+//   → 够得着更深处更高级的残骸 → 更值钱的子弹包 → 杀更多敌 → …
 // 初始绳子只能拉一级小件；大飞机（终极目标）需要满级绳子才能捞。
 export const SALVAGE3D_CONFIG = {
     ctaUrl: 'https://lastwar.onelink.me/PXmq/playable',
@@ -85,12 +86,24 @@ export const SALVAGE3D_CONFIG = {
     detectRange: 10,
     pickups: {
         pickupRange: 1.35,
-        // 废料→子弹兑换率：越高级的物体换的子弹越多。
-        // （主角攻击与炮塔共用弹池后调高了一级件的产出，保证前期供得上。）
-        ammoByKind: { scrap1: 4, scrap2: 6, scrap3: 9 } as Record<string, number>,
         // 金币面值（敌人掉落，拾取直接入账）。
         coinValue: 8,
     },
+    // 回收机：废料排队加工成子弹包实体，堆在出料口等主角搬去炮塔。
+    depot: {
+        // 出料口朝防线方向（传送带把子弹包送到基地前沿），缩短补给腿。
+        output: { x: 0, z: 4.5 },
+        convertInterval: 0.35,
+        pileCap: 10,
+        // 废料 kind → 子弹包 kind；包面值见 packValues（越高级越值钱）。
+        scrapToPack: { scrap1: 'ammo1', scrap2: 'ammo2', scrap3: 'ammo3' } as Record<string, string>,
+        packValues: { ammo1: 4, ammo2: 6, ammo3: 9 } as Record<string, number>,
+    },
+    // 子弹包交付半径（挨着任意一座炮塔即可卸货入弹池）。
+    supplyRange: 2.0,
+    // 大飞机军火库：终极打捞的兑现——机上弹药直接并入防线，
+    // 让玩家有底气迎接总攻（终局不该还靠人力小跑供弹）。
+    vaultAmmoPayload: 60,
     avatarCombat: {
         meleeRange: 1.3,
         rangedRange: 4.5,
@@ -109,13 +122,13 @@ export const SALVAGE3D_CONFIG = {
         fireInterval: 0.12,
         bulletSpeed: 14,
         deathTime: 1.1,
-        trickleInterval: 5.5,
+        trickleInterval: 6,
         trickleCount: 2,
         ammoCap: 80,
         // 围墙：敌人抵墙改攻墙。对标案伤害关系——小兵挠 1、BOSS 砸 10；
         // 击破=失败，可复活重试 1 次。
         wall: {
-            maxHp: 140,
+            maxHp: 150,
             gruntDamage: 1,
             bossDamage: 10,
             attackInterval: 1.0,
