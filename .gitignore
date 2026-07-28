@@ -8,3 +8,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 %SystemDrive%/
+output/
+reference/incoming/*.mp4
+reference/incoming/*.mov
+reference/incoming/*.webm
+__pycache__/
+*.pyc

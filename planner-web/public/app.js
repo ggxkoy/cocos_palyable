@@ -28,6 +28,7 @@ const resultPanel = document.querySelector('#resultPanel');
 const resultName = document.querySelector('#resultName');
 const documentPreview = document.querySelector('#documentPreview');
 const downloadLink = document.querySelector('#downloadLink');
+const pdfDownloadLink = document.querySelector('#pdfDownloadLink');
 const copyResultButton = document.querySelector('#copyResultButton');
 const agentLabel = document.querySelector('#agentLabel');
 const steps = [...document.querySelectorAll('[data-step]')];
@@ -178,6 +179,8 @@ async function loadResult(job) {
     resultName.textContent = job.outputName || '策划案.md';
     documentPreview.textContent = resultText;
     downloadLink.href = `/api/jobs/${job.id}/download${accessKey ? `?key=${encodeURIComponent(accessKey)}` : ''}`;
+    pdfDownloadLink.href = `/api/jobs/${job.id}/pdf${accessKey ? `?key=${encodeURIComponent(accessKey)}` : ''}`;
+    pdfDownloadLink.hidden = !job.outputPdfName;
     resultPanel.hidden = false;
     resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

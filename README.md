@@ -8,6 +8,7 @@
 
 ```bash
 npm ci
+python -m pip install -r planner-web/requirements.txt
 npm run planner:start
 ```
 
