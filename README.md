@@ -46,6 +46,9 @@ npm run planner:start -- --host 0.0.0.0
 
 完整说明见 [`docs/workflow.md`](docs/workflow.md)，策划案格式见 [`docs/design-doc-template.md`](docs/design-doc-template.md)。
 
+> **第一原则：策划案是事实来源。** 主产物是策划案，playable 只是它的一次实现。
+> 任何玩法/数值/表现改动先进策划案、再进代码；`npm run lint:design` 会把两者钉在一起。
+
 ### 直接打开工程
 
 1. Cocos Creator Dashboard（3.8.x）添加仓库根目录为项目。
@@ -82,8 +85,12 @@ npm run planner:start -- --host 0.0.0.0
 
 ## 验证（无编辑器环境）
 
+- `npm run verify` —— 提交前一次跑完下面三件套
+- `npm run lint:design` —— **策划案 ↔ 代码一致性**：章节完整性 + 「模板映射」表的每个
+  Config 点路径与真实数值逐项比对（策划案是事实来源，代码不许悄悄跑偏）
 - `npm run typecheck` —— 全部脚本 strict 检查（基于手写 stub `types/cc.d.ts`；编辑器内如与真实声明冲突，把 `types/` 从 tsconfig include 移除即可）
-- 场景 JSON lint 与各模板 Model 冒烟脚本写法见 `CLAUDE.md` 与 git 历史
+- `npm run lint:scenes` —— 场景 JSON 引用完整性 + 资产 uuid + 组件脚本 meta
+- 各模板 Model/Sim 冒烟脚本写法见 `CLAUDE.md` 与 git 历史
 
 ## 参考与预览
 
