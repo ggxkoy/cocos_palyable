@@ -51,7 +51,10 @@ description: 解析参考视频，输出 playable 策划案 markdown（视频 �
      封面大纲、资源循环、角色&道具动作拆解、地编需求、流程引导表、
      数值大小关系原则、敌人攻击机制、UI&引导按钮、音效），写入 `docs/design/<视频名称>.md`。
      填不出的格留 {待定} 并注明依据缺失，不允许编造。
-   - 数值配置节要与所选模板 `assets/scripts/<template>/<Template>Config.ts` 的字段一一对应；填不出来的字段保留模板默认值并注明。
+   - **「模板映射」表必须机器可校验**：`配置项` 一列写成目标 Config 的点路径并用反引号
+     包住（如 `` `defense.wall.maxHp` ``），`值` 与代码一致；正文里要出现目标
+     `assets/scripts/**/XxxConfig.ts` 路径。写完跑 `npm run lint:design` 必须绿。
+     填不出来的字段保留模板默认值并注明。
    - 关键帧截图挑 3-6 张有代表性的复制到 `docs/design/<视频名称>-frames/`，在资产清单中引用。
 
 6. **交付**

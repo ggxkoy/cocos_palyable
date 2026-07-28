@@ -3,6 +3,19 @@
 这是一个 Cocos Creator 3.8 playable 广告模板工程 + 「视频→策划案→playable」流水线。
 全貌见 `docs/workflow.md`，策划案 schema 见 `docs/design-doc-template.md`。
 
+## 最高优先级：策划案是事实来源
+
+**这条压过下面所有约定。** 本仓库的主产物是策划案（`docs/design/<名称>.md`），
+playable 只是策划案的一次实现。
+
+1. **先改策划案，再改代码。** 用户提出任何玩法/数值/表现改动（哪怕只是一句话），
+   第一步写进对应策划案的相应章节，第二步才改 `assets/scripts/`。
+   禁止「先实现完再回头补文档」。
+2. 策划案按 `docs/design-doc-template.md` 的三冰 schema 组织；新章节需求先进 schema。
+3. 「模板映射」表必须机器可校验：`配置项` 写成目标 Config 的点路径（反引号包住），
+   `值` 与代码一致；`npm run lint:design` 逐项比对，不一致即失败。
+4. 填不出来的格留 `{待定}` 并注明依据缺失，**不允许编造**。
+
 ## 两个核心任务的操作手册（纯 markdown，任何 agent 均可执行）
 
 - **视频 → 策划案**：按 `.claude/commands/video-to-design.md` 的步骤执行
@@ -15,10 +28,13 @@
 
 ## 验证命令（无编辑器环境，必须全绿）
 
+- `npm run lint:design` —— **策划案 ↔ 代码一致性校验，改任何数值/字段名必跑**
 - `npm run typecheck` —— 静态验证，改完代码必跑
 - `npm run lint:scenes` —— 场景 JSON 校验（引用完整性 + 资产 uuid + 组件脚本 meta）
-- 各模板 Model/Sim 冒烟测试：tsc 编译到 temp/smoke 后 node 驱动（写法参考 git 历史）
-  （tsc 编译到 temp/smoke 再用 node 驱动状态机，用完删除；temp/ 已 gitignore）
+- `npm run verify` —— 上面三件套一起跑（提交前）
+- 各模板 Model/Sim 冒烟测试：tsc 编译到 temp/smoke 后 node 驱动状态机走全流程
+  （用完删除；temp/ 已 gitignore）。改经济/压力数值要用脚本机器人验通关，
+  必要时参数扫描选档，结论写回策划案数值设计章节。
 
 ## 约定
 

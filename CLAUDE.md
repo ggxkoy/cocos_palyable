@@ -3,11 +3,28 @@
 这是一个 Cocos Creator 3.8 playable 广告模板工程 + 「视频→策划案→playable」流水线。
 全貌见 `docs/workflow.md`，策划案 schema 见 `docs/design-doc-template.md`。
 
+## 最高优先级：策划案是事实来源
+
+**这条压过下面所有约定。** 本仓库的主产物是策划案（`docs/design/<名称>.md`），
+playable 只是策划案的一次实现。因此：
+
+1. **先改策划案，再改代码。** 用户提出任何玩法/数值/表现改动（哪怕只是一句话），
+   第一步是把它写进对应策划案的相应章节，第二步才是改 `assets/scripts/`。
+   禁止「先实现完再回头补文档」——那样文档必然落后、失去事实来源资格。
+2. **策划案按 `docs/design-doc-template.md` 的三冰 schema 组织**（封面/参考视频/
+   分析结论/资源循环/角色&道具/地编需求/流程引导&数值设计/UI&引导按钮/音效/模板映射）。
+   新章节需求先进 schema，再进个案。
+3. **「模板映射」表必须机器可校验**：`配置项` 写成目标 Config 的点路径（反引号包住），
+   `值` 与代码一致；`npm run lint:design` 逐项比对，改了数值没改文档会直接失败。
+4. 填不出来的格留 `{待定}` 并注明依据缺失，**不允许编造**（视频里看不清就写看不清）。
+
 ## 常用命令
 
+- `npm run lint:design` —— **策划案 ↔ 代码一致性校验，改任何数值/字段名必跑**
 - `npm run typecheck` —— 静态验证，改完代码必跑
 - `npm run lint:scenes` —— 场景 JSON 校验（__id__ 引用、资产 __uuid__ 是否存在、
   组件压缩 uuid 是否有对应脚本 meta），改过 .scene / 新增 ccclass 必跑
+- `npm run verify` —— 上面三件套一起跑（提交前）
 - `/video-to-design <视频路径>` —— 参考视频 → `docs/design/<名称>.md` 策划案
 - `/design-to-playable <策划案路径>` —— 策划案 → 模板实例化
 
@@ -36,6 +53,8 @@
 - **场景接资产**：新增 ccclass 脚本要同时手写 `.ts.meta`（uuid 自定即可），场景组件
   `__type__` 用压缩 uuid（算法见 tools/scene-lint.mjs）；prefab/AnimationClip 槽位
   可直接在场景 JSON 里写 `__uuid__`（FBX 子资产 uuid 在对应 .fbx.meta 的 subMetas）。
-- 本环境没有 Cocos 编辑器：验证靠 typecheck + `npm run lint:scenes` + Model 冒烟
-  （tsc 编译到 temp/smoke 再用 node 驱动，用完删除；temp/ 已 gitignore）。
+- 本环境没有 Cocos 编辑器：验证靠 `npm run verify`（design/typecheck/scenes 三件套）
+  + Model 冒烟（tsc 编译到 temp/smoke 再用 node 驱动，用完删除；temp/ 已 gitignore）。
+- **数值平衡靠量不靠猜**：改动经济/压力数值后，用 temp/smoke 的脚本机器人跑通关，
+  必要时做参数扫描选档，把结论（含被否掉的档位）写回策划案的数值设计章节。
 - 提交推送到分支 `claude/cocos-playable-rebuild-78po8l`，不要开 PR 除非用户要求。

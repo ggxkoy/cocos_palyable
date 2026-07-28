@@ -20,6 +20,13 @@ Cocos Creator 打开 assets/scenes/<模板>.scene 预览
 构建导出 web-mobile 单文件 playable
 ```
 
+## 第一原则：策划案是事实来源
+
+主产物是策划案，playable 是它的一次实现。任何玩法/数值/表现改动**先进策划案、再进代码**；
+策划案「模板映射」表用点路径写死到 Config 字段，`npm run lint:design` 逐项比对，
+代码悄悄改了数值而文档没跟上会直接失败。策划案 schema 对标
+`docs/design/reference/三冰-试玩广告脚本-模拟经营+策略.pdf`。
+
 ## 三层结构
 
 1. **入口层**：`reference/incoming/`（视频上传目录）+ 两条 slash 命令（`.claude/commands/`）。
@@ -86,11 +93,13 @@ BehaviorTree（Sequence/Selector/Condition/Action/Repeat，驱动自主人物：
 
 ## 验证手段（无编辑器环境可用）
 
+- `npm run lint:design` —— 策划案「模板映射」表 ↔ 真实 Config 逐项比对（防文档漂移）
 - `npm run typecheck` —— 全部脚本 strict 检查（types/cc.d.ts stub）
 - `npm run lint:scenes` —— 校验 scene JSON：__id__ 引用、资产 __uuid__（含 FBX
   子资产）真实存在、自定义组件压缩 uuid 有对应脚本 meta
 - Model 冒烟 —— tsc 编译到 temp/ 后用 node 驱动状态机走全流程（FbxAnimator
   可用 mock 的 cc 模块单测帧段/循环/一次性逻辑）
+- `npm run verify` —— design/typecheck/scenes 三件套，提交前跑
 
 ## 新增玩法模板的方法
 
